@@ -1,8 +1,5 @@
 import unittest
-from k_token import Token, TokenType
-from scanner import Scanner
-from ast import *
-from errors import LexicalError, ParseError, SemanticError
+from src.scanner import Scanner
 
 
 class ScannerTestCases(unittest.TestCase):

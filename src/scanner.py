@@ -1,5 +1,5 @@
-from k_token import Token, TokenType
-from errors import LexicalError
+from src.k_token import Token, TokenType
+from src.errors import LexicalError
 
 
 class Scanner:
