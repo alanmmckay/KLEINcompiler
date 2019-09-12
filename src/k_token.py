@@ -1,29 +1,12 @@
 from enum import Enum
 
 class TokenType(Enum):
-    MAIN = 1
-    PRINT = 2
-    NUMBER = 3
-    IF = 4
-    THEN = 5
-    ELSE = 6
-    NOT = 7
-    AND = 8
-    OR = 9
-    EQUALS = 10
-    WORD = 11
-    PLUS = 12
-    MINUS = 13
-    LESSTHAN = 14
-    TIMES = 15
-    DIVIDE = 16
-    LEFTPEREN = 17
-    RIGHTPEREN = 18
-    BEGINCOMM = 19
-    ENDCOMM = 20
-    COMMA = 21
-    COLON = 22
-    EOF = 23
+    NUMBER = 1
+    KEYWORD = 2
+    WORD = 3
+    OPERATORS = 4
+    SEPERATORS = 5
+    EOF = 6
 
 
 class Token:
@@ -32,70 +15,70 @@ class Token:
         self.token_value = token_value
 
     def is_main(self):
-        return self.token_type == TokenType.MAIN
+        return self.token_type == TokenType.WORD
 
     def is_print(self):
-        return self.token_type == TokenType.PRINT
+        return self.token_type == TokenType.WORD
 
     def is_number(self):
         return self.token_type == TokenType.NUMBER
 
     def is_if(self):
-        return self.token_type == TokenType.IF
+        return self.token_type == TokenType.KEYWORD
 
     def is_then(self):
-        return self.token_type == TokenType.THEN
+        return self.token_type == TokenType.KEYWORD
 
     def is_else(self):
-        return self.token_type == TokenType.ELSE
+        return self.token_type == TokenType.KEYWORD
 
     def is_not(self):
-        return self.token_type == TokenType.NOT
+        return self.token_type == TokenType.KEYWORD
 
     def is_and(self):
-        return self.token_type == TokenType.AND
+        return self.token_type == TokenType.KEYWORD
 
     def is_or(self):
-        return self.token_type == TokenType.OR
+        return self.token_type == TokenType.KEYWORD
 
     def is_equals(self):
-        return self.token_type == TokenType.EQUALS
+        return self.token_type == TokenType.OPERATORS
 
     def is_word(self):
         return self.token_type == TokenType.WORD
 
     def is_plus(self):
-        return self.token_type == TokenType.PLUS
+        return self.token_type == TokenType.OPERATORS
 
     def is_minus(self):
-        return self.token_type == TokenType.MINUS
+        return self.token_type == TokenType.OPERATORS
 
     def is_lessthan(self):
-        return self.token_type == TokenType.LESSTHAN
+        return self.token_type == TokenType.OPERATORS
 
     def is_times(self):
-        return self.token_type == TokenType.TIMES
+        return self.token_type == TokenType.OPERATORS
 
     def is_divide(self):
-        return self.token_type == TokenType.DIVIDE
+        return self.token_type == TokenType.OPERATORS
 
     def is_leftperen(self):
-        return self.token_type == TokenType.LEFTPEREN
+        return self.token_type == TokenType.SEPERATORS
 
     def is_rightperen(self):
-        return self.token_type == TokenType.RIGHTPEREN
+        return self.token_type == TokenType.SEPERATORS
 
     def is_begincomm(self):
-        return self.token_type == TokenType.BEGINCOMM
+        return self.token_type == TokenType.SEPERATORS
 
     def is_endcomm(self):
-        return self.token_type == TokenType.ENDCOMM
+        return self.token_type == TokenType.SEPERATORS
 
     def is_comma(self):
-        return self.token_type == TokenType.COMMA
+        return self.token_type == TokenType.SEPERATORS
 
     def is_colon(self):
-        return self.token_type == TokenType.COLON
+        return self.token_type == TokenType.SEPERATORS
 
     def is_eof(self):
         return self.token_type == TokenType.EOF
