@@ -7,7 +7,8 @@ class TokenType(Enum):
     OPERATORS = 4
     SEPERATORS = 5
     BOOLEAN = 6
-    EOF = 7
+    PRIMITIVE = 7
+    EOF = 8
 
 
 class Token:
@@ -15,14 +16,20 @@ class Token:
         self.token_type = token_type
         self.token_value = token_value
 
-    def is_main(self):
-        return self.token_type == TokenType.WORD
-
-    def is_print(self):
-        return self.token_type == TokenType.WORD
-
     def is_number(self):
         return self.token_type == TokenType.NUMBER
+
+    def is_true(self):
+        return self.token_type == TokenType.BOOLEAN
+
+    def is_false(self):
+        return self.token_type == TokenType.BOOLEAN
+
+    def is_main(self):
+        return self.token_type == TokenType.PRIMITIVE
+
+    def is_print(self):
+        return self.token_type == TokenType.PRIMITIVE
 
     def is_if(self):
         return self.token_type == TokenType.KEYWORD
@@ -86,6 +93,10 @@ class Token:
             return 'main'
         elif self.is_print():
             return 'print'
+        elif self.is_true():
+            return 'true'
+        elif self.is_false():
+            return 'false'
         elif self.is_if():
             return 'if'
         elif self.is_then():
