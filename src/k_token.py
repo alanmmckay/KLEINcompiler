@@ -6,7 +6,8 @@ class TokenType(Enum):
     WORD = 3
     OPERATORS = 4
     SEPERATORS = 5
-    EOF = 6
+    BOOLEAN = 6
+    EOF = 7
 
 
 class Token:

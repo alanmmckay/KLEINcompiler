@@ -18,18 +18,29 @@ class ScannerTestCases(unittest.TestCase):
 
     def test_word_past_whitespace(self):
         '''Find word past whitespace.'''
-        s = Scanner('   aBc ')
+        s = Scanner('   heLlo ')
         self.assertTrue(s.peek().is_word(), 'peek past whitespace')
 
         next_token = s.next_token()
         self.assertTrue(next_token.is_word(), 'right token type')
-        self.assertEqual(next_token.value(), 'aBc', 'right token value')
+        self.assertEqual(next_token.value(), 'heLlo', 'right token value')
+
+        self.assertTrue(s.next_token().is_eof(), 'EOF after word')
+
+    def test_keyword_past_whitespace(self):
+        '''Find word past whitespace.'''
+        s = Scanner('   if ')
+        self.assertTrue(s.peek().is_if(), 'peek past whitespace')
+
+        next_token = s.next_token()
+        self.assertTrue(next_token.is_if(), 'right token type')
+        self.assertEqual(next_token.value(), 'if', 'right token value')
 
         self.assertTrue(s.next_token().is_eof(), 'EOF after word')
 
     def test_word_within_iterals(self):
         '''Find word within two literals.'''
-        s = Scanner('+aBc=')
+        s = Scanner('+hello=')
         self.assertTrue(s.next_token().is_plus())
         self.assertTrue(s.next_token().is_word())
         self.assertTrue(s.next_token().is_equals())
@@ -93,13 +104,6 @@ class ScannerTestCases(unittest.TestCase):
         next_token = s.next_token()
         self.assertTrue(next_token.is_number(), 'found right token')
         self.assertEqual(next_token.value(), 100)
-
-    # def test_beggin_comment(self):
-    #     '''Find begin comment.'''
-    #     s = Scanner('(*')
-    #     next_token = s.next_token()
-    #     self.assertTrue(next_token.is_begincomm(), 'right token type')
-    #     self.assertEqual(next_token.value(), '(*', 'right token value')
 
     def test_perens(self):
         '''Find two perens inside whitespace.'''
