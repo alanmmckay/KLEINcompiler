@@ -3,6 +3,7 @@ from src.errors import LexicalError
 
 keywords = ["function", "boolean", "if", "then", "else", "not", "and", "or"]
 boolean = ["true", "false"]
+primitive = ["main", "print"]
 
 class Scanner:
     'Read tokens from an input stream'
@@ -59,19 +60,19 @@ class Scanner:
 
         if self.program_str[self.pos] == '(':
             self.pos += 1
-            return Token(TokenType.SEPERATORS)
+            return Token(TokenType.DELIMETER)
 
         if self.program_str[self.pos] == ')':
             self.pos += 1
-            return Token(TokenType.SEPERATORS)
+            return Token(TokenType.DELIMETER)
 
         if self.program_str[self.pos] == ',':
             self.pos += 1
-            return Token(TokenType.SEPERATORS)
+            return Token(TokenType.DELIMETER)
 
         if self.program_str[self.pos] == ':':
             self.pos += 1
-            return Token(TokenType.SEPERATORS)
+            return Token(TokenType.DELIMETER)
 
         if self.program_str[self.pos].isalpha():
             word = self.get_word()
@@ -79,6 +80,8 @@ class Scanner:
                 return Token(TokenType.KEYWORD, word)
             elif word in boolean:
                 return Token(TokenType.BOOLEAN, word)
+            elif word in primitive:
+                return Token(TokenType.PRIMITIVE, word)
             else:
                 return Token(TokenType.WORD, word)
 
@@ -105,7 +108,7 @@ class Scanner:
     def get_word(self):
         start = self.pos
         while self.pos < len(self.program_str) and \
-                self.program_str[self.pos].isalpha() or self.program_str[self.pos] in "123456789_":
+                self.program_str[self.pos].isalpha() or self.program_str[self.pos] in "0123456789_":
             self.pos += 1
         return self.program_str[start: self.pos]
 
