@@ -69,12 +69,6 @@ class Token:
     def is_rightperen(self):
         return self.token_type == TokenType.SEPERATORS
 
-    def is_begincomm(self):
-        return self.token_type == TokenType.SEPERATORS
-
-    def is_endcomm(self):
-        return self.token_type == TokenType.SEPERATORS
-
     def is_comma(self):
         return self.token_type == TokenType.SEPERATORS
 
@@ -124,10 +118,6 @@ class Token:
             return 'left peren'
         elif self.is_rightperen():
             return 'right peren'
-        elif self.is_begincomm():
-            return 'begin comment'
-        elif self.is_endcomm():
-            return 'end comment'
         elif self.is_comma():
             return 'comma'
         elif self.is_colon():

@@ -55,6 +55,16 @@ class ScannerTestCases(unittest.TestCase):
         self.assertTrue(next_token.is_word(), 'second token right')
         self.assertEqual(next_token.value(), 'rahe')
 
+    def test_word_with_number(self):
+        '''Find word and number.'''
+        s = Scanner(' tyler12')
+        next_token = s.next_token()
+        self.assertTrue(next_token.is_word(), 'first token right')
+        self.assertEqual(next_token.value(), 'tyler')
+        next_token = s.next_token()
+        self.assertTrue(next_token.is_number(), 'second token right')
+        self.assertEqual(next_token.value(), 12)
+
     def test_one_number(self):
         '''Find number.'''
         s = Scanner('42')
