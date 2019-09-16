@@ -105,7 +105,7 @@ class Scanner:
     def get_word(self):
         start = self.pos
         while self.pos < len(self.program_str) and \
-                self.program_str[self.pos].isalpha():
+                self.program_str[self.pos].isalpha() or self.program_str[self.pos] in "123456789_":
             self.pos += 1
         return self.program_str[start: self.pos]
 

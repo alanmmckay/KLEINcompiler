@@ -18,12 +18,12 @@ class ScannerTestCases(unittest.TestCase):
 
     def test_word_past_whitespace(self):
         '''Find word past whitespace.'''
-        s = Scanner('   heLlo ')
+        s = Scanner('   heLlo_1 ')
         self.assertTrue(s.peek().is_word(), 'peek past whitespace')
 
         next_token = s.next_token()
         self.assertTrue(next_token.is_word(), 'right token type')
-        self.assertEqual(next_token.value(), 'heLlo', 'right token value')
+        self.assertEqual(next_token.value(), 'heLlo_1', 'right token value')
 
         self.assertTrue(s.next_token().is_eof(), 'EOF after word')
 
@@ -35,6 +35,17 @@ class ScannerTestCases(unittest.TestCase):
         next_token = s.next_token()
         self.assertTrue(next_token.is_if(), 'right token type')
         self.assertEqual(next_token.value(), 'if', 'right token value')
+
+        self.assertTrue(s.next_token().is_eof(), 'EOF after word')
+
+    def test_boolean_past_whitespace(self):
+        '''Find word past whitespace.'''
+        s = Scanner('   true ')
+        self.assertTrue(s.peek().is_true(), 'peek past whitespace')
+
+        next_token = s.next_token()
+        self.assertTrue(next_token.is_true(), 'right token type')
+        self.assertEqual(next_token.value(), 'true', 'right token value')
 
         self.assertTrue(s.next_token().is_eof(), 'EOF after word')
 
