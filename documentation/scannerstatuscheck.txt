@@ -1,0 +1,34 @@
+Scanner Status Check - Team Fork Bomb
+
+1) List of Token Types
+    -WORD
+    -KEYWORD
+    -LITERAL
+    -OPERATOR
+    -DELIMITER
+
+2) Examples:
+
+    -WORD and KEYWORD: Anything which acts as a user-defined identifier. x, X, 
+xX, testFunction, and so on. WORDS may not have whitespace in them. These may 
+not be longer than 256 characters, and must begin with a letter while being 
+composed of a combination of letters, digits, and the underscore. It's worth 
+noting a keyword is not a word. So integer, boolean, true, false, if, then, 
+else, not, and, or, and function are not words. main and print are both words, 
+but they are primitive in the sense that they have pre-defined values associated 
+with them. 
+
+    -LITERAL: Data represented without an identifier. Any integer value in the 
+range of -2^31 to 2^31-1. true and false are both primitive boolean literals 
+which represent 1 and 0 respectively.
+
+    -OPERATOR: +, -, *, /, <, =. The set of punctuation marks which perform 
+mathematical operations or assignment operations.  This is a pretty rigid set of 
+tokens. Any that are not in this list is not an operator. For example, ++ is not 
+an operator. The usage of - in conjunction with a literal indicates the 
+operation of 0-literal.
+
+    -DELIMITER: (, ), (*, *), ,. Expressions which expresses a change in 
+syntactic expectation. For example, a left parenthesis lets the compiler know 
+that a parameter or argument is expected, where the right parenthesis lets the 
+compiler know to no longer expect either of these two.
