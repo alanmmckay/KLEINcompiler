@@ -1,18 +1,19 @@
-import sys
+from sys import argv, path
+import os
+path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.scanner import Scanner
 
-# make sure the file is where it is suppose to be
-filename = sys.argv[1]
+# set file path
+FILE_PATH = argv[1]
 
-# read in prgm, turn to string
-myfile = open(filename)
-program = myfile.read()
+# turn prgm into a string
+FILE_PATH = FILE_PATH.strip("\r")
+with open(FILE_PATH, "r") as klein:
+    klein_program = klein.read()
 
-# kick of scanner with prgm
-s = Scanner(program)
-token = s.get_next_token()
+# run program on scanner and get token
+s = Scanner(klein_program)
+tokens = s.get_next_token()
 
-# while scanner gets tokens print out type and value
-while True:
-    for tokens in token:
-        print(s.token.token_type, s.token.token_value)
+# print token
+print(tokens.token_type, str(tokens.token_value))
