@@ -1,0 +1,3 @@
+#!/bin/bash
+FILE_PATH=$1
+python3 ./display/print_tokens.py $FILE_PATH
