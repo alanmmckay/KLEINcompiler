@@ -1,0 +1,8 @@
+function main(a : integer, b : integer, n : integer) : integer
+    if n = 0
+       then a
+       else printAndDivide(a, b, n)
+
+function printAndDivide(a : integer, b : integer, n : integer) : integer
+    print((10 * a) / b)
+    main (MOD(a*10, b), b, n-1)
