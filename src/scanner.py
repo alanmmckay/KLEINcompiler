@@ -91,7 +91,7 @@ class Scanner:
             else:
                 return Token(TokenType.WORD, word)
 
-        if self.program_str[self.pos] in '0123456789':
+        if self.program_str[self.pos] in '123456789':
             number = self.get_number()
             return Token(TokenType.NUMBER, number)
 
