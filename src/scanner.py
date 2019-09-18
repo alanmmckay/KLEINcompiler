@@ -35,45 +35,49 @@ class Scanner:
         if self.pos >= len(self.program_str):
             return Token(TokenType.EOF)
 
+        if self.program_str[self.pos] == '0':
+            self.pos += 1
+            return Token(TokenType.NUMBER, "0")
+
         if self.program_str[self.pos] == '=':
             self.pos += 1
-            return Token(TokenType.OPERATORS)
+            return Token(TokenType.OPERATORS, "=")
 
         if self.program_str[self.pos] == '+':
             self.pos += 1
-            return Token(TokenType.OPERATORS)
+            return Token(TokenType.OPERATORS, "+")
 
         if self.program_str[self.pos] == '-':
             self.pos += 1
-            return Token(TokenType.OPERATORS)
+            return Token(TokenType.OPERATORS, "-")
 
         if self.program_str[self.pos] == '<':
             self.pos += 1
-            return Token(TokenType.OPERATORS)
+            return Token(TokenType.OPERATORS, "<")
 
         if self.program_str[self.pos] == '*':
             self.pos += 1
-            return Token(TokenType.OPERATORS)
+            return Token(TokenType.OPERATORS, "*")
 
         if self.program_str[self.pos] == '/':
             self.pos += 1
-            return Token(TokenType.OPERATORS)
+            return Token(TokenType.OPERATORS, "/")
 
         if self.program_str[self.pos] == '(':
             self.pos += 1
-            return Token(TokenType.DELIMETER)
+            return Token(TokenType.DELIMETER, "(")
 
         if self.program_str[self.pos] == ')':
             self.pos += 1
-            return Token(TokenType.DELIMETER)
+            return Token(TokenType.DELIMETER, ")")
 
         if self.program_str[self.pos] == ',':
             self.pos += 1
-            return Token(TokenType.DELIMETER)
+            return Token(TokenType.DELIMETER, ",")
 
         if self.program_str[self.pos] == ':':
             self.pos += 1
-            return Token(TokenType.DELIMETER)
+            return Token(TokenType.DELIMETER, ":")
 
         if self.program_str[self.pos].isalpha():
             word = self.get_word()

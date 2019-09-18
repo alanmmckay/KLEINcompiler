@@ -15,5 +15,11 @@ with open(FILE_PATH, "r") as klein:
 s = Scanner(klein_program)
 tokens = s.get_next_token()
 
-# print token
-print(tokens.token_type, str(tokens.token_value))
+#go through all tokens in the file
+while True:
+    if tokens.__repr__() == "end_of_stream":
+        print(tokens.__repr__())
+        break
+    else:
+        print(tokens.__repr__())
+        tokens = s.get_next_token()

@@ -45,25 +45,25 @@ class Token:
 
     def __repr__(self):
         if self.is_keyword():
-            return 'keyword' + self.token_value
+            return 'keyword      ' + self.token_value
 
         elif self.is_number():
-            return 'number = ' + str(self.token_value)
+            return 'number       ' + str(self.token_value)
 
         elif self.is_word():
-            return 'word  = ' + self.token_value
+            return 'word         ' + self.token_value
 
         elif self.is_boolean():
-            return 'boolean  = ' + self.token_value
+            return 'boolean    ' + self.token_value
 
         elif self.is_primitive():
-            return 'primitive = ' + self.token_value
+            return 'primitive    ' + self.token_value
 
         elif self.is_operator():
-            return 'operator = ' + self.token_value
+            return 'operator     ' + self.token_value
 
         elif self.is_delimeter():
-            return 'delimeter = ' + self.token_value
+            return 'delimeter    ' + self.token_value
 
         else:  # is_eof()
             return 'end_of_stream'
