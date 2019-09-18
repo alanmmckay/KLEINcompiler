@@ -65,7 +65,12 @@ class Scanner:
 
         if self.program_str[self.pos] == '(':
             self.pos += 1
-            return Token(TokenType.DELIMETER, "(")
+            if self.program_str[self.pos] == '*':
+                self.pos += 1
+                self.skip_comment();
+                return
+            else:
+                return Token(TokenType.DELIMETER, "(")
 
         if self.program_str[self.pos] == ')':
             self.pos += 1
@@ -124,6 +129,18 @@ class Scanner:
             self.pos += 1
         return int(self.program_str[start: self.pos])
 
+    def skip_comment(self):
+        while self.pos < len(self.program_str):
+            if self.program_str[self.pos] == '*':
+                self.pos += 1
+                if self.program_str[self.pos] == ')':
+                    self.pos += 1
+                    return
+            else:
+                self.pos += 1
+        if self.pos >= len(self.program_str):
+            self.pos -= 1
+        return
 
 # code copied for use in get_next_token() ------------------
 #     if the scanner takes a file to read ------------------
