@@ -1,3 +1,4 @@
+import sys
 from src.k_token import Token, TokenType
 from src.errors import LexicalError
 
@@ -90,7 +91,7 @@ class Scanner:
             else:
                 return Token(TokenType.WORD, word)
 
-        if self.program_str[self.pos] in '123456789':
+        if self.program_str[self.pos] in '0123456789':
             number = self.get_number()
             return Token(TokenType.NUMBER, number)
 
@@ -122,17 +123,7 @@ class Scanner:
         while self.pos < len(self.program_str) and \
                 self.program_str[self.pos] in '0123456789':
             self.pos += 1
+        if int(self.program_str[start: self.pos]) > 2147483647:
+            print("too big")
+            sys.exit()
         return int(self.program_str[start: self.pos])
-
-
-# code copied for use in get_next_token() ------------------
-#     if the scanner takes a file to read ------------------
-'''
-  with open(filename) as f:
-    while True:
-      c = f.read(1)
-      if not c:
-        print "End of file"
-        break
-      print "Read a character:", c
-'''
