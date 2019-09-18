@@ -66,7 +66,12 @@ class Scanner:
 
         if self.program_str[self.pos] == '(':
             self.pos += 1
-            return Token(TokenType.DELIMETER, "(")
+            if self.program_str[self.pos] == '*':
+                self.pos += 1
+                self.skip_comment();
+                return
+            else:
+                return Token(TokenType.DELIMETER, "(")
 
         if self.program_str[self.pos] == ')':
             self.pos += 1
@@ -123,7 +128,21 @@ class Scanner:
         while self.pos < len(self.program_str) and \
                 self.program_str[self.pos] in '0123456789':
             self.pos += 1
+
         if int(self.program_str[start: self.pos]) > 2147483647:
             print("too big")
             sys.exit()
         return int(self.program_str[start: self.pos])
+
+    def skip_comment(self):
+        while self.pos < len(self.program_str):
+            if self.program_str[self.pos] == '*':
+                self.pos += 1
+                if self.program_str[self.pos] == ')':
+                    self.pos += 1
+                    return
+            else:
+                self.pos += 1
+        if self.pos >= len(self.program_str):
+            self.pos -= 1
+        return
