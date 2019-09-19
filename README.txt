@@ -25,11 +25,12 @@ scannerstatuscheck.txt - this is our initial check in on the project.
 
 programs:
 This directory contains legal and non legal Klein programs to test our compiler with.
+multiply.kln - this is the legal program created by the team.
 
 src:
 errors.py
-k_token.py
-scanner.py
+k_token.py - this is the file that defines token type, what it is, and how it is represented.
+scanner.py - 
 tests.py
 
 tests:
