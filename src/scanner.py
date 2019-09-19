@@ -2,13 +2,13 @@ import sys
 from src.k_token import Token, TokenType
 from src.errors import LexicalError
 
-
-keywords = ["function", "boolean", "if", "then", "else", "not", "and", "or"]
+keywords = ["function", "boolean", "if", "then", "else", "not", "and", "or", "integer"]
 boolean = ["true", "false"]
 primitive = ["main", "print"]
 
+
 class Scanner:
-    'Read tokens from an input stream'
+    """Read tokens from an input stream"""
 
     def __init__(self, program_str):
         self.program_str = program_str
