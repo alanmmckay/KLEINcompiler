@@ -124,9 +124,13 @@ class Scanner:
     def get_word(self):
         start = self.pos
         while self.pos < len(self.program_str) and \
-                self.program_str[self.pos].isalpha() or self.program_str[self.pos] in "0123456789_":
+        self.program_str[self.pos].isalpha() or self.program_str[self.pos] in "0123456789_":
             self.pos += 1
+            if (self.pos - start) > 256:
+                msg = 'IDENTIFIER exceeds character limit on line {} \n IDENTIFIER: {}'.format(self.line,self.program_str[start: self.pos])
+                raise LexicalError(msg)
         return self.program_str[start: self.pos]
+
 
     def get_number(self):
         start = self.pos
