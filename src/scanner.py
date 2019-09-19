@@ -14,6 +14,7 @@ class Scanner:
         self.program_str = program_str
         self.pos = 0
         self.lookahead = None
+        self.line = 1
 
     def peek(self):
         if not self.lookahead:
@@ -102,7 +103,9 @@ class Scanner:
 
         # if no token matches, signal an error
 
-        msg = 'invalid characters at position {}'.format(self.pos)
+        #msg = 'invalid characters at position {}'.format(self.pos)
+        msg = 'invalid character: {} on line {}'.format(self.program_str[self.pos], self.line)
+        #msg = 'invalid character: '+program_str[self.pos]+' on line '+self.line
         raise LexicalError(msg)
 
     # --------------------------------------------------------
@@ -114,6 +117,8 @@ class Scanner:
         return
 
     def is_whitespace(self, ch):
+        if ch == '\n':
+            self.line += 1
         return ch in ' \n\t\r'
 
     def get_word(self):
