@@ -146,3 +146,4 @@ class Scanner:
         if self.pos >= len(self.program_str):
             self.pos -= 1
         return
+
