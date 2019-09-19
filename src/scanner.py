@@ -103,9 +103,7 @@ class Scanner:
 
         # if no token matches, signal an error
 
-        #msg = 'invalid characters at position {}'.format(self.pos)
         msg = 'invalid character: {} on line {}'.format(self.program_str[self.pos], self.line)
-        #msg = 'invalid character: '+program_str[self.pos]+' on line '+self.line
         raise LexicalError(msg)
 
     # --------------------------------------------------------
@@ -127,7 +125,8 @@ class Scanner:
         self.program_str[self.pos].isalpha() or self.program_str[self.pos] in "0123456789_":
             self.pos += 1
             if (self.pos - start) > 256:
-                msg = 'IDENTIFIER exceeds character limit on line {} \n IDENTIFIER: {}'.format(self.line,self.program_str[start: self.pos])
+                msg = 'IDENTIFIER exceeds 256 character limit on line {} \n IDENTIFIER: {}'
+                msg = msg.format(self.line,self.program_str[start: self.pos])
                 raise LexicalError(msg)
         return self.program_str[start: self.pos]
 
@@ -139,8 +138,10 @@ class Scanner:
             self.pos += 1
 
         if int(self.program_str[start: self.pos]) > 2147483647:
-            print("too big")
-            sys.exit()
+            msg = "INTEGER out of bounds on line {} \n INTEGER: {} \n must be within range +/- 2147483647"
+            msg = msg.format(self.line,self.program_str[start: self.pos])
+            raise LexicalError(msg)
+            #sys.exit() perhaps remove sys import?
         return int(self.program_str[start: self.pos])
 
     def skip_comment(self):
