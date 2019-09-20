@@ -19,6 +19,7 @@ The Repository:
 home directory = KLEINcompiler
 
 doc:
+begin_state_machine.jff - JFlap file for our state machine
 klein_machine.jpg - this is an image of the state machine we came up with, it is missing comments and returns off certain states to minimize size for easier understanding.
 RegularExpressions.txt - this file contains our reg ex's for each token
 scannerstatuscheck.txt - this is our initial check in on the project.
@@ -29,16 +30,20 @@ multiply.kln - this is the legal program created by the team.
 
 src:
 errors.py
-k_token.py - this is the file that defines token type, what it is, and how it is represented.
-scanner.py - 
-tests.py
+k_token.py - this is the file that sets up token type, what it is, and how it is represented.
+scanner.py - this is the file that the program is ran through where characters are defined as specific token types.
+tests.py - contains tests for the scanner and token class
 
 tests:
-print_tokens.py
+print_tokens.py - this file reads the program into a string, feeds it into the scanner and outputs token representation.
 
 kleins:
+Is a shell script that kicks off the process.
 
 
+TO RUN:
 
-to run scanner on one of your machines be in the home directory and run ./kleins programs/math.py
-the (programs/math.py) can be any klein programs PATH
+To kick off the scanner portion of the project we will be using the shell script described above.
+
+Run the command > sh kleins programs/print-one.kln
+(programs/print-one.kln) - in the command above can be replaced with the file path to any klein program.
