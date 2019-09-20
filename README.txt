@@ -19,6 +19,7 @@ The Repository:
 home directory = KLEINcompiler
 
 doc:
+begin_state_machine.jff - JFlap file for our state machine
 klein_machine.jpg - this is an image of the state machine we came up with, it is missing comments and returns off certain states to minimize size for easier understanding.
 RegularExpressions.txt - this file contains our reg ex's for each token
 scannerstatuscheck.txt - this is our initial check in on the project.
