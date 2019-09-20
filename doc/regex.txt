@@ -1,0 +1,10 @@
+Regex values for token types:
+INTEGER ::= [0-2147483647]
+DELIMITER ::= (:|,|(|)|(*|*))
+OPERATOR ::= (+|-|*|/)
+BOOLEAN ::= (true|false)
+KEYWORD ::= (integer|if|true|false|then|else|not|and|or|function|main|print)
+WORD ::= [(a-z)|(A-Z)][(a-z)|(A-Z)|(0-9)|_]{0,255}
+
+The items in sets BOOLEAN and KEYWORD are exempt from WORD; that is:
+WORD ::= WORD - (BOOLEAN + KEYWORD)
