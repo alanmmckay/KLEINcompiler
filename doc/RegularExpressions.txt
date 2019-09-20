@@ -1,7 +1,0 @@
-Reg_expression values:
-Integers::= [0 - (2^31-1)]
-Word::= [(a-z)|(A-Z)] [(a-z)|(A-Z)|(0-9)|_]*
-Keyword::= ("integer"|"if"|"true"|"false"|"then"|"else"|"not"|"and"|"or"|"function"|"main"|"print")
-Operators::=
-Delimeter::=
-Boolean::=
