@@ -17,7 +17,7 @@ class NonTerminal(Enum):
     Simple_Expr = 11
     Simple_Expr_t = 12
     Term = 13
-    Term_p = 14
+    Term_t = 14
     Factor = 15
     Factor_t = 16
     Actuals = 17
@@ -27,5 +27,19 @@ class NonTerminal(Enum):
     Print_Statement = 21
 
 
-parse_table = {(NonTerminal.Program, TokenType.KEYWORD): [],
-               (NonTerminal.Definitions, TokenType.KEYWORD): []}
+parse_table = {(NonTerminal.Program, TokenType.KEYWORD): [NonTerminal.Definitions],
+               (NonTerminal.Definitions, TokenType.KEYWORD): [NonTerminal.Def, NonTerminal.Definitions],
+               (NonTerminal.Definitions, TokenType.EOF): [],
+               (NonTerminal.Def, TokenType.KEYWORD): [TokenType.KEYWORD, TokenType.WORD, TokenType.DELIMETER,
+                                                      NonTerminal.Formals, TokenType.DELIMETER, TokenType.DELIMETER,
+                                                      NonTerminal.Type, NonTerminal.Body],
+               (NonTerminal.Formals, TokenType.WORD): [NonTerminal.Nonempty_Formals],
+               (NonTerminal.Formals, TokenType.DELIMETER): [TokenType.DELIMETER],
+               (NonTerminal.Nonempty_Formals, TokenType.WORD): [NonTerminal.Formal, NonTerminal.Nonempty_Formals_t],
+               (NonTerminal.Nonempty_Formals_t, TokenType.DELIMETER): [TokenType.DELIMETER, NonTerminal.Nonempty_Formals],
+               (NonTerminal.Nonempty_Formals_t, TokenType.DELIMETER): [TokenType.DELIMETER],
+               (NonTerminal.Formal, TokenType.WORD): [TokenType.WORD, TokenType.DELIMETER, NonTerminal.Type],
+               (NonTerminal.Body, TokenType.WORD): [NonTerminal.Print_Statement, NonTerminal.Body],
+               (NonTerminal.Body, TokenType.KEYWORD): [NonTerminal.Expr],
+               (NonTerminal.Type, TokenType.NUMBER): [TokenType.NUMBER],
+               (NonTerminal.Type, TokenType.BOOLEAN): [TokenType.BOOLEAN]}
