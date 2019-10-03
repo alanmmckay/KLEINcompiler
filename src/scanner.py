@@ -3,7 +3,7 @@ from src.errors import LexicalError
 
 keywords = ["function", "boolean", "if", "then", "else", "not", "and", "or", "integer"]
 boolean = ["true", "false"]
-primitive = ["main", "print"]
+# primitive = ["main", "print"]
 
 
 class Scanner:
@@ -102,8 +102,8 @@ class Scanner:
                 return Token(TokenType.KEYWORD, word)
             elif word in boolean:
                 return Token(TokenType.BOOLEAN, word)
-            elif word in primitive:
-                return Token(TokenType.PRIMITIVE, word)
+            # elif word in primitive:
+            #     return Token(TokenType.PRIMITIVE, word)
             else:
                 return Token(TokenType.WORD, word)
             # --------------------------------------------
