@@ -34,12 +34,25 @@ parse_table = {(NonTerminal.Program, TokenType.KEYWORD): [NonTerminal.Definition
                                                       NonTerminal.Formals, TokenType.DELIMETER, TokenType.DELIMETER,
                                                       NonTerminal.Type, NonTerminal.Body],
                (NonTerminal.Formals, TokenType.WORD): [NonTerminal.Nonempty_Formals],
-               (NonTerminal.Formals, TokenType.DELIMETER): [TokenType.DELIMETER],
+               (NonTerminal.Formals, TokenType.DELIMETER): [TokenType.DELIMETER],#---#
                (NonTerminal.Nonempty_Formals, TokenType.WORD): [NonTerminal.Formal, NonTerminal.Nonempty_Formals_t],
                (NonTerminal.Nonempty_Formals_t, TokenType.DELIMETER): [TokenType.DELIMETER, NonTerminal.Nonempty_Formals],
-               (NonTerminal.Nonempty_Formals_t, TokenType.DELIMETER): [TokenType.DELIMETER],
+               (NonTerminal.Nonempty_Formals_t, TokenType.DELIMETER): [TokenType.DELIMETER],#---#
                (NonTerminal.Formal, TokenType.WORD): [TokenType.WORD, TokenType.DELIMETER, NonTerminal.Type],
-               (NonTerminal.Body, TokenType.WORD): [NonTerminal.Print_Statement, NonTerminal.Body],
-               (NonTerminal.Body, TokenType.KEYWORD): [NonTerminal.Expr],
-               (NonTerminal.Type, TokenType.NUMBER): [TokenType.NUMBER],
-               (NonTerminal.Type, TokenType.BOOLEAN): [TokenType.BOOLEAN]}
+               (NonTerminal.Body, TokenType.DELIMETER): [NonTerminal.Expr],
+               (NonTerminal.Body, TokenType.NUMBER): [NonTerminal.Expr],#
+               (NonTerminal.Body, TokenType.BOOLEAN): [NonTerminal.Expr],#
+               (NonTerminal.Body, TokenType.OPERATOR): [NonTerminal.Expr],#
+               (NonTerminal.Body, TokenType.KEYWORD): [NonTerminal.Expr],#
+               (NonTerminal.Body, TokenType.PRIMITIVE): [NonTerminal.Print_Statement, NonTerminal.Body],
+               (NonTerminal.Type, TokenType.KEYWORD): [TokenType.KEYWORD],
+               (NonTerminal.Expr, TokenType.DELIMITER): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr, TokenType.NUMBER): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr, TokenType.BOOLEAN): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr, TokenType.DELIMITER): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr, TokenType.KEYWORD): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr_p, TokenType.KEYWORD): [TokenType.KEYWORD],
+               (NonTerminal.Expr_p, TokenType.DELIMETER): [TokenType.DELIMITER],
+               (NonTerminal.Expr_p, TokenType.OPERATORS): [TokenType.OPERATORS, NonTerminal.Expr],
+               
+                                                       
