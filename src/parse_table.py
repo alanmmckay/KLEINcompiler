@@ -36,16 +36,16 @@ class Terminal(Enum):
     boolean = 7
     lessThan = 8
     equals = 9
-    or = 10
+    orr = 10
     plus = 11
     minus = 12
-    and = 13
+    andd = 13
     mult = 14
     divide = 15
     iif = 16
     then = 17
     eelse = 18
-    not = 19
+    nnot = 19
     pprint = 20
     
 parse_table = {
@@ -64,7 +64,7 @@ parse_table = {
                (NonTerminal.Body, Terminal.openParen): [NonTerminal.Expr],
                (NonTerminal.Body, Terminal.minus): [NonTerminal.Expr],
                (NonTerminal.Body, Terminal.iif): [NonTerminal.Expr],
-               (NonTerminal.Body, Terminal.not): [NonTerminal.Expr],
+               (NonTerminal.Body, Terminal.nnot): [NonTerminal.Expr],
                (NonTerminal.Body, TokenType.NUMBER): [NonTerminal.Expr],
                (NonTerminal.Body, TokenType.BOOLEAN): [NonTerminal.Expr],
                (NonTerminal.Body, TokenType.WORD): [NonTerminal.Expr],
@@ -76,14 +76,14 @@ parse_table = {
                (NonTerminal.Expr, TokenType.BOOLEAN): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
                (NonTerminal.Expr, Terminal.minus): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
                (NonTerminal.Expr, Terminal.iif): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
-               (NonTerminal.Expr, Terminal.not): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr, Terminal.nnot): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
                (NonTerminal.Expr, TokenType.WORD): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
                (NonTerminal.Expr_p, Terminal.function): [],
                (NonTerminal.Expr_p, Terminal.closeParen): [],
                (NonTerminal.Expr_p, Terminal.comma): [],
                (NonTerminal.Expr_p, Terminal.lessThan): [TokenType.OPERATORS, NonTerminal.Expr],
                (NonTerminal.Expr_p, Terminal.equals): [TokenType.OPERATORS, NonTerminal.Expr],
-               (NonTerminal.Expr_p, Terminal.and): [],
+               (NonTerminal.Expr_p, Terminal.andd): [],
                (NonTerminal.Expr_p, Terminal.mult): [],
                (NonTerminal.Expr_p, Terminal.divide): [],
                (NonTerminal.Expr_p, Terminal.then): [],
@@ -93,11 +93,11 @@ parse_table = {
                (NonTerminal.Simple_Expr, TokenType.BOOLEAN): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
                (NonTerminal.Simple_Expr, Terminal.minus): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
                (NonTerminal.Simple_Expr, Terminal.iif): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
-               (NonTerminal.Simple_Expr, Terminal.not): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
+               (NonTerminal.Simple_Expr, Terminal.nnot): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
                (NonTerminal.Simple_Expr, TokenType.WORD): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
                (NonTerminal.Simple_Expr_t, Terminal.lessThan): [],
                (NonTerminal.Simple_Expr_t, Terminal.equals): [],
-               (NonTerminal.Simple_Expr_t, Terminal.or): [TokenType.KEYWORD, NonTerminal.Simple_Expr],
+               (NonTerminal.Simple_Expr_t, Terminal.orr): [TokenType.KEYWORD, NonTerminal.Simple_Expr],
                (NonTerminal.Simple_Expr_t, Terminal.plus): [TokenType.OPERATORS, NonTerminal.Simple_Expr],
                (NonTerminal.Simple_Expr_t, Terminal.minus): [TokenType.OPERATORS, NonTerminal.Simple_Expr],
                (NonTerminal.Term, Terminal.openParen): [NonTerminal.Factor, NonTerminal.Term_t],
@@ -105,12 +105,12 @@ parse_table = {
                (NonTerminal.Term, TokenType.BOOLEAN): [NonTerminal.Factor, NonTerminal.Term_t],
                (NonTerminal.Term, Terminal.minus): [NonTerminal.Factor, NonTerminal.Term_t],
                (NonTerminal.Term, Terminal.iif): [NonTerminal.Factor, NonTerminal.Term_t],
-               (NonTerminal.Term, Terminal.not): [NonTerminal.Factor, NonTerminal.Term_t],
+               (NonTerminal.Term, Terminal.nnot): [NonTerminal.Factor, NonTerminal.Term_t],
                (NonTerminal.Term, TokenType.WORD): [NonTerminal.Factor, NonTerminal.Term_t],
-               (NonTerminal.Term_t, Terminal.or): [],
+               (NonTerminal.Term_t, Terminal.orr): [],
                (NonTerminal.Term_t, Terminal.plus): [],
                (NonTerminal.Term_t, Terminal.minus): [],
-               (NonTerminal.Term_t, Terminal.and): [TokenType.OPERATORS, NonTerminal.Term],
+               (NonTerminal.Term_t, Terminal.andd): [TokenType.OPERATORS, NonTerminal.Term],
                (NonTerminal.Term_t, Terminal.mult): [TokenType.OPERATORS, NonTerminal.Term],
                (NonTerminal.Term_t, Terminal.divide): [TokenType.OPERATORS, NonTerminal.Term],
                (NonTerminal.Factor, Terminal.openParen): [TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER],
@@ -118,30 +118,30 @@ parse_table = {
                (NonTerminal.Factor, TokenType.BOOLEAN): [NonTerminal.Literal],
                (NonTerminal.Factor, Terminal.minus): [TokenType.OPERATORS, NonTerminal.Factor],
                (NonTerminal.Factor, Terminal.iif): [TokenType.KEYWORD, NonTerminal.Expr, TokenType.KEYWORD, NonTerminal.Expr, TokenType.KEYWORD],
-               (NonTerminal.Factor, Terminal.not): [TokenType.KEYWORD, NonTerminal.Factor],
+               (NonTerminal.Factor, Terminal.nnot): [TokenType.KEYWORD, NonTerminal.Factor],
                (NonTerminal.Factor, TokenType.WORD): [TokenType.WORD, NonTerminal.Factor_t],
                (NonTerminal.Factor_t, Terminal.openParen): [TokenType.DELIMETER, NonTerminal.Actuals, TokenType.DELIMETER],
-               (NonTerminal.Factor_t, Terminal.and): [],
-               (NonTerminal.Factor_t, Terminal.mult: [],
+               (NonTerminal.Factor_t, Terminal.andd): [],
+               (NonTerminal.Factor_t, Terminal.mult): [],
                (NonTerminal.Factor_t, Terminal.divide): [],
                (NonTerminal.Actuals, TokenType.NUMBER): [NonTerminal.Nonempty_Actuals],
                (NonTerminal.Actuals, TokenType.BOOLEAN): [NonTerminal.Nonempty_Actuals],
                (NonTerminal.Actuals, Terminal.minus): [NonTerminal.Nonempty_Actuals],
                (NonTerminal.Actuals, Terminal.iif): [NonTerminal.Nonempty_Actuals],
-               (NonTerminal.Actuals, Terminal.not): [NonTerminal.Nonempty_Actuals],
+               (NonTerminal.Actuals, Terminal.nnot): [NonTerminal.Nonempty_Actuals],
                (NonTerminal.Actuals, TokenType.WORD): [NonTerminal.Nonempty_Actuals],
                (NonTerminal.Nonempty_Actuals, TokenType.NUMBER): [NonTerminal.Expr, Nonempty_Actuals_t],
                (NonTerminal.Nonempty_Actuals, TokenType.BOOLEAN): [NonTerminal.Expr, Nonempty_Actuals_t],
                (NonTerminal.Nonempty_Actuals, Terminal.minus): [NonTerminal.Expr, Nonempty_Actuals_t],
                (NonTerminal.Nonempty_Actuals, Terminal.iif): [NonTerminal.Expr, Nonempty_Actuals_t],
-               (NonTerminal.Nonempty_Actuals, Terminal.not): [NonTerminal.Expr, Nonempty_Actuals_t],
+               (NonTerminal.Nonempty_Actuals, Terminal.nnot): [NonTerminal.Expr, Nonempty_Actuals_t],
                (NonTerminal.Nonempty_Actuals, TokenType.WORD): [NonTerminal.Expr, Nonempty_Actuals_t],
                (NonTerminal.Nonempty_Actuals_t, Terminal.openParen): [],
                (NonTerminal.Nonempty_Actuals_t, Terminal.comma): [TokenType.DELIMETER, NonTerminal.Nonempty_Actuals],
                (NonTerminal.Nonempty_Actuals_t, Terminal.openParen): [],
                (NonTerminal.Literal, TokenType.NUMBER): [TokenType.NUMBER],
                (NonTerminal.Literal, TokenType.BOOLEAN): [TokenType.BOOLEAN],
-               (NonTerminal.Print_Statement, Terminal.pprint): [TokenType.KEYWORD, TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER)
+               (NonTerminal.Print_Statement, Terminal.pprint): [TokenType.KEYWORD, TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER]
 }
                
                
