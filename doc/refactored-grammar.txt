@@ -1,0 +1,46 @@
+<PROGRAM> ::= <DEFINITIONS>
+<DEFINITIONS> ::= <DEF> <DEFINITIONS>
+                | E
+<DEF> ::= function <IDENTIFIER> ( <FORMALS> ) : <TYPE> <BODY>
+<FORMALS>  ::= <NONEMPTYFORMALS>
+            | E
+<NONEMPTYFORMALS> ::= <FORMAL> <NONEMPTYFORMALS-TAIL>
+<NONEMPTYFORMALS-TAIL> ::=  , <NONEMPTYFORMALS>
+                        | E
+<FORMAL> ::= <IDENTIFIER> : <TYPE>
+<BODY> ::= <PRINT-STATEMENT> <BODY>
+         | <EXPR>
+<TYPE> ::= integer
+         | boolean
+<EXPR> ::= <SIMPLE-EXPR> <EXPR-TAIL>
+<EXPR-TAIL> ::= < <EXPR>
+              | = <EXPR>
+              | E
+<SIMPLE-EXPR> ::= <TERM> <SIMPLE-EXPR-TAIL>
+<SIMPLE-EXPR-TAIL> ::= or <SIMPLE-EXPR>
+                           | + <SIMPLE-EXPR>
+                           | - <SIMPLE-EXPR>
+                           | E                           
+<TERM> ::= <FACTOR> <TERM-TAIL>
+<TERM-TAIL> ::= and <TERM>
+              | * <TERM>
+              | / <TERM>
+              | E
+<FACTOR> ::= if <EXPR> then <EXPR> else <EXPR>
+           | not <FACTOR>
+           | - <FACTOR>
+           | <IDENTIFIER> <FACTOR-TAIL>
+           | <LITERAL>
+           | ( <EXPR> )
+<FACTOR-TAIL> ::= ( <ACTUALS> )
+                | E
+<ACTUALS> ::= <NONEMPTYACTUALS>
+            | E
+<NONEMPTYACTUALS> ::= <EXPR> <NONEMPTYACTUALS-TAIL>
+<NONEMPTYACTUALS-TAIL> ::= , <NONEMPTYACTUALS>
+                         | E
+<LITERAL> ::= <NUMBER>
+            | <BOOLEAN>
+<PRINT-STATEMENT> ::= print ( <EXPR> )
+
+terminals: function, (, ), :, ,, integer, boolean, <, =, or, +, -, and, *, /, if, then, else, not, print, $
