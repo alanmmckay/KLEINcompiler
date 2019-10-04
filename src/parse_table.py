@@ -26,33 +26,125 @@ class NonTerminal(Enum):
     Literal = 20
     Print_Statement = 21
 
-
-parse_table = {(NonTerminal.Program, TokenType.KEYWORD): [NonTerminal.Definitions],
-               (NonTerminal.Definitions, TokenType.KEYWORD): [NonTerminal.Def, NonTerminal.Definitions],
+class Terminal(Enum):
+    function = 1
+    openParen = 2
+    closeParen = 3
+    colon = 4
+    comma = 5
+    integer = 6
+    boolean = 7
+    lessThan = 8
+    equals = 9
+    or = 10
+    plus = 11
+    minus = 12
+    and = 13
+    mult = 14
+    divide = 15
+    iif = 16
+    then = 17
+    eelse = 18
+    not = 19
+    pprint = 20
+    
+parse_table = {
+               (NonTerminal.Program, Terminal.function): [NonTerminal.Definitions],
+               (NonTerminal.Definitions, Terminal.function): [NonTerminal.Def, NonTerminal.Definitions],
                (NonTerminal.Definitions, TokenType.EOF): [],
-               (NonTerminal.Def, TokenType.KEYWORD): [TokenType.KEYWORD, TokenType.WORD, TokenType.DELIMETER,
+               (NonTerminal.Def, TokenType.function): [TokenType.KEYWORD, TokenType.WORD, TokenType.DELIMETER,
                                                       NonTerminal.Formals, TokenType.DELIMETER, TokenType.DELIMETER,
                                                       NonTerminal.Type, NonTerminal.Body],
                (NonTerminal.Formals, TokenType.WORD): [NonTerminal.Nonempty_Formals],
-               (NonTerminal.Formals, TokenType.DELIMETER): [TokenType.DELIMETER],#---#
+               (NonTerminal.Formals, Terminal.closeParen): [],
                (NonTerminal.Nonempty_Formals, TokenType.WORD): [NonTerminal.Formal, NonTerminal.Nonempty_Formals_t],
-               (NonTerminal.Nonempty_Formals_t, TokenType.DELIMETER): [TokenType.DELIMETER, NonTerminal.Nonempty_Formals],
-               (NonTerminal.Nonempty_Formals_t, TokenType.DELIMETER): [TokenType.DELIMETER],#---#
+               (NonTerminal.Nonempty_Formals_t, Terminal.comma): [TokenType.DELIMETER, NonTerminal.Nonempty_Formals],
+               (NonTerminal.Nonempty_Formals_t, Terminal.closeParen): [],
                (NonTerminal.Formal, TokenType.WORD): [TokenType.WORD, TokenType.DELIMETER, NonTerminal.Type],
-               (NonTerminal.Body, TokenType.DELIMETER): [NonTerminal.Expr],
-               (NonTerminal.Body, TokenType.NUMBER): [NonTerminal.Expr],#
-               (NonTerminal.Body, TokenType.BOOLEAN): [NonTerminal.Expr],#
-               (NonTerminal.Body, TokenType.OPERATOR): [NonTerminal.Expr],#
-               (NonTerminal.Body, TokenType.KEYWORD): [NonTerminal.Expr],#
-               (NonTerminal.Body, TokenType.PRIMITIVE): [NonTerminal.Print_Statement, NonTerminal.Body],
-               (NonTerminal.Type, TokenType.KEYWORD): [TokenType.KEYWORD],
-               (NonTerminal.Expr, TokenType.DELIMITER): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Body, Terminal.openParen): [NonTerminal.Expr],
+               (NonTerminal.Body, Terminal.minus): [NonTerminal.Expr],
+               (NonTerminal.Body, Terminal.iif): [NonTerminal.Expr],
+               (NonTerminal.Body, Terminal.not): [NonTerminal.Expr],
+               (NonTerminal.Body, TokenType.NUMBER): [NonTerminal.Expr],
+               (NonTerminal.Body, TokenType.BOOLEAN): [NonTerminal.Expr],
+               (NonTerminal.Body, TokenType.WORD): [NonTerminal.Expr],
+               (NonTerminal.Body, Terminal.pprint): [NonTerminal.Print_Statement, NonTerminal.Body],
+               (NonTerminal.Type, Terminal.integer): [TokenType.KEYWORD],
+               (NonTerminal.Type, Terminal.boolean): [TokenType.KEYWORD],
+               (NonTerminal.Expr, Terminal.openParen): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
                (NonTerminal.Expr, TokenType.NUMBER): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
                (NonTerminal.Expr, TokenType.BOOLEAN): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
-               (NonTerminal.Expr, TokenType.DELIMITER): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
-               (NonTerminal.Expr, TokenType.KEYWORD): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
-               (NonTerminal.Expr_p, TokenType.KEYWORD): [TokenType.KEYWORD],
-               (NonTerminal.Expr_p, TokenType.DELIMETER): [TokenType.DELIMITER],
-               (NonTerminal.Expr_p, TokenType.OPERATORS): [TokenType.OPERATORS, NonTerminal.Expr],
+               (NonTerminal.Expr, Terminal.minus): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr, Terminal.iif): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr, Terminal.not): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr, TokenType.WORD): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
+               (NonTerminal.Expr_p, Terminal.function): [],
+               (NonTerminal.Expr_p, Terminal.closeParen): [],
+               (NonTerminal.Expr_p, Terminal.comma): [],
+               (NonTerminal.Expr_p, Terminal.lessThan): [TokenType.OPERATORS, NonTerminal.Expr],
+               (NonTerminal.Expr_p, Terminal.equals): [TokenType.OPERATORS, NonTerminal.Expr],
+               (NonTerminal.Expr_p, Terminal.and): [],
+               (NonTerminal.Expr_p, Terminal.mult): [],
+               (NonTerminal.Expr_p, Terminal.divide): [],
+               (NonTerminal.Expr_p, Terminal.then): [],
+               (NonTerminal.Expr_p, Terminal.eelse): [],
+               (NonTerminal.Simple_Expr, Terminal.openParen): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
+               (NonTerminal.Simple_Expr, TokenType.NUMBER): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
+               (NonTerminal.Simple_Expr, TokenType.BOOLEAN): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
+               (NonTerminal.Simple_Expr, Terminal.minus): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
+               (NonTerminal.Simple_Expr, Terminal.iif): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
+               (NonTerminal.Simple_Expr, Terminal.not): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
+               (NonTerminal.Simple_Expr, TokenType.WORD): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
+               (NonTerminal.Simple_Expr_t, Terminal.lessThan): [],
+               (NonTerminal.Simple_Expr_t, Terminal.equals): [],
+               (NonTerminal.Simple_Expr_t, Terminal.or): [TokenType.KEYWORD, NonTerminal.Simple_Expr],
+               (NonTerminal.Simple_Expr_t, Terminal.plus): [TokenType.OPERATORS, NonTerminal.Simple_Expr],
+               (NonTerminal.Simple_Expr_t, Terminal.minus): [TokenType.OPERATORS, NonTerminal.Simple_Expr],
+               (NonTerminal.Term, Terminal.openParen): [NonTerminal.Factor, NonTerminal.Term_t],
+               (NonTerminal.Term, TokenType.NUMBER): [NonTerminal.Factor, NonTerminal.Term_t],
+               (NonTerminal.Term, TokenType.BOOLEAN): [NonTerminal.Factor, NonTerminal.Term_t],
+               (NonTerminal.Term, Terminal.minus): [NonTerminal.Factor, NonTerminal.Term_t],
+               (NonTerminal.Term, Terminal.iif): [NonTerminal.Factor, NonTerminal.Term_t],
+               (NonTerminal.Term, Terminal.not): [NonTerminal.Factor, NonTerminal.Term_t],
+               (NonTerminal.Term, TokenType.WORD): [NonTerminal.Factor, NonTerminal.Term_t],
+               (NonTerminal.Term_t, Terminal.or): [],
+               (NonTerminal.Term_t, Terminal.plus): [],
+               (NonTerminal.Term_t, Terminal.minus): [],
+               (NonTerminal.Term_t, Terminal.and): [TokenType.OPERATORS, NonTerminal.Term],
+               (NonTerminal.Term_t, Terminal.mult): [TokenType.OPERATORS, NonTerminal.Term],
+               (NonTerminal.Term_t, Terminal.divide): [TokenType.OPERATORS, NonTerminal.Term],
+               (NonTerminal.Factor, Terminal.openParen): [TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER],
+               (NonTerminal.Factor, TokenType.NUMBER): [NonTerminal.Literal],
+               (NonTerminal.Factor, TokenType.BOOLEAN): [NonTerminal.Literal],
+               (NonTerminal.Factor, Terminal.minus): [TokenType.OPERATORS, NonTerminal.Factor],
+               (NonTerminal.Factor, Terminal.iif): [TokenType.KEYWORD, NonTerminal.Expr, TokenType.KEYWORD, NonTerminal.Expr, TokenType.KEYWORD],
+               (NonTerminal.Factor, Terminal.not): [TokenType.KEYWORD, NonTerminal.Factor],
+               (NonTerminal.Factor, TokenType.WORD): [TokenType.WORD, NonTerminal.Factor_t],
+               (NonTerminal.Factor_t, Terminal.openParen): [TokenType.DELIMETER, NonTerminal.Actuals, TokenType.DELIMETER],
+               (NonTerminal.Factor_t, Terminal.and): [],
+               (NonTerminal.Factor_t, Terminal.mult: [],
+               (NonTerminal.Factor_t, Terminal.divide): [],
+               (NonTerminal.Actuals, TokenType.NUMBER): [NonTerminal.Nonempty_Actuals],
+               (NonTerminal.Actuals, TokenType.BOOLEAN): [NonTerminal.Nonempty_Actuals],
+               (NonTerminal.Actuals, Terminal.minus): [NonTerminal.Nonempty_Actuals],
+               (NonTerminal.Actuals, Terminal.iif): [NonTerminal.Nonempty_Actuals],
+               (NonTerminal.Actuals, Terminal.not): [NonTerminal.Nonempty_Actuals],
+               (NonTerminal.Actuals, TokenType.WORD): [NonTerminal.Nonempty_Actuals],
+               (NonTerminal.Nonempty_Actuals, TokenType.NUMBER): [NonTerminal.Expr, Nonempty_Actuals_t],
+               (NonTerminal.Nonempty_Actuals, TokenType.BOOLEAN): [NonTerminal.Expr, Nonempty_Actuals_t],
+               (NonTerminal.Nonempty_Actuals, Terminal.minus): [NonTerminal.Expr, Nonempty_Actuals_t],
+               (NonTerminal.Nonempty_Actuals, Terminal.iif): [NonTerminal.Expr, Nonempty_Actuals_t],
+               (NonTerminal.Nonempty_Actuals, Terminal.not): [NonTerminal.Expr, Nonempty_Actuals_t],
+               (NonTerminal.Nonempty_Actuals, TokenType.WORD): [NonTerminal.Expr, Nonempty_Actuals_t],
+               (NonTerminal.Nonempty_Actuals_t, Terminal.openParen): [],
+               (NonTerminal.Nonempty_Actuals_t, Terminal.comma): [TokenType.DELIMETER, NonTerminal.Nonempty_Actuals],
+               (NonTerminal.Nonempty_Actuals_t, Terminal.openParen): [],
+               (NonTerminal.Literal, TokenType.NUMBER): [TokenType.NUMBER],
+               (NonTerminal.Literal, TokenType.BOOLEAN): [TokenType.BOOLEAN],
+               (NonTerminal.Print_Statement, Terminal.pprint): [TokenType.KEYWORD, TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER)
+}
+               
+               
+               
                
                                                        
