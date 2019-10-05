@@ -1,6 +1,6 @@
 from src.scanner import Scanner
 from src.errors import ParseError
-from src.parse_table import NonTerminal, parse_table
+from src.parse_table import NonTerminal, Terminal, StaticTerminal, parse_table
 from src.k_token import Token, TokenType
 
 
@@ -28,6 +28,9 @@ class Parser:
             A = top(stack)
             if isinstance(A, TokenType):
                 t = self.scanner.next_token()
+                print(A)
+                print(t.token_type)
+                print(t.token_value)
                 if A == t.token_type:
                     pop(stack)
                 else:
@@ -35,7 +38,15 @@ class Parser:
                     raise ParseError(msg.format(A, t))
             elif isinstance(A, NonTerminal):
                 t = self.scanner.peek()
-                rule = parse_table.get((A, t.token_type))
+                if(t.token_type == TokenType.OPERATORS or TokenType.DELIMETER or TokenType.KEYWORD):
+                    terminal = StaticTerminal(t)
+                    terminal = terminal.value
+                else:
+                    terminal = t.token_type
+                rule = parse_table.get((A, terminal))
+                print(A)
+                print(terminal)
+                print()
                 if rule is not None:
                     pop(stack)
                     push_rule(rule, stack)
