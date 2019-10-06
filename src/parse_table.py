@@ -93,6 +93,7 @@ class StaticTerminal():
         elif(self.value == "print"):
             self.value = Terminal.terminal_print
         else:
+            print(self.value)
             raise ValueError("Error in Static Terminal!")
         
 print(Terminal.closeParen.name)

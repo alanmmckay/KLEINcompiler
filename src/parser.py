@@ -26,9 +26,13 @@ class Parser:
         push_rule([NonTerminal.Program, TokenType.EOF], stack)
         while stack:
             A = top(stack)
+            string = ""
+            for element in stack:
+                string = string + element.name+" "
+            print(stack)
+            print(A)
             if isinstance(A, TokenType):
                 t = self.scanner.next_token()
-                print(A)
                 print(t.token_type)
                 print(t.token_value)
                 if A == t.token_type:
@@ -38,15 +42,15 @@ class Parser:
                     raise ParseError(msg.format(A, t))
             elif isinstance(A, NonTerminal):
                 t = self.scanner.peek()
-                if(t.token_type == TokenType.OPERATORS or TokenType.DELIMETER or TokenType.KEYWORD):
+                print(t.token_type)
+                if((t.token_type == TokenType.OPERATORS) or (t.token_type == TokenType.DELIMETER) or (t.token_type == TokenType.KEYWORD)):
                     terminal = StaticTerminal(t)
                     terminal = terminal.value
                 else:
                     terminal = t.token_type
-                rule = parse_table.get((A, terminal))
-                print(A)
                 print(terminal)
-                print()
+                rule = parse_table.get((A, terminal))
+                print(rule)
                 if rule is not None:
                     pop(stack)
                     push_rule(rule, stack)
@@ -57,6 +61,7 @@ class Parser:
                 msg = 'invalid item on stack: {}'
                 raise ParseError(msg.format(A))
 
+            print()
         if not t.is_eof():
             msg = 'unexpected token at end: {}'
             raise ParseError(msg.format(t))
