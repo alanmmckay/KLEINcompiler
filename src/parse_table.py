@@ -94,9 +94,8 @@ class StaticTerminal():
             self.value = Terminal.terminal_print
         else:
             print(self.value)
-            raise ValueError("Error in Static Terminal!")
+            raise ValueError("Error in StaticTerminal Class!")
         
-print(Terminal.closeParen.name)
 parse_table = {
                (NonTerminal.Program, Terminal.function): [NonTerminal.Definitions],
                (NonTerminal.Definitions, Terminal.function): [NonTerminal.Def, NonTerminal.Definitions],
