@@ -42,5 +42,3 @@
 <LITERAL> ::= <NUMBER>
             | <BOOLEAN>
 <PRINT-STATEMENT> ::= print ( <EXPR> )
-
-terminals: function, (, ), :, ,, integer, boolean, <, =, or, +, -, and, *, /, if, then, else, not, print, $

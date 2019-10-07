@@ -1,7 +1,7 @@
 from src.k_token import Token, TokenType
 from src.errors import LexicalError
 
-keywords = ["function", "boolean", "if", "then", "else", "not", "and", "or", "integer"]
+keywords = ["function", "boolean", "if", "then", "else", "not", "and", "or", "integer", "print"]
 boolean = ["true", "false"]
 # primitive = ["main", "print"]
 
