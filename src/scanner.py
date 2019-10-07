@@ -117,7 +117,8 @@ class Scanner:
 
         # if no token matches, signal an error
         msg = 'invalid character: {} on line {}'.format(self.program_str[self.pos], self.line)
-        raise LexicalError(msg)
+        LexicalError(msg, self.program_str, self.pos)
+        #raise LexicalError(msg, self.pos, program_str)
 
     # --------------------------------------------------------
 
@@ -140,7 +141,7 @@ class Scanner:
             if (self.pos - start) > 256:
                 msg = 'IDENTIFIER exceeds 256 character limit on line {} \n IDENTIFIER: {}'
                 msg = msg.format(self.line, self.program_str[start: self.pos])
-                raise LexicalError(msg)
+                raise LexicalError(msg, self.program_str, self.pos)
         return self.program_str[start: self.pos]
 
     def get_number(self):
@@ -151,7 +152,7 @@ class Scanner:
         if int(self.program_str[start: self.pos]) > 2147483647:
             msg = "INTEGER out of bounds on line {} \n INTEGER: {} \n must be within range +/- 2147483647"
             msg = msg.format(self.line, self.program_str[start: self.pos])
-            raise LexicalError(msg)
+            raise LexicalError(msg, self.program_str, self.pos)
         return int(self.program_str[start: self.pos])
 
     def skip_comment(self):
