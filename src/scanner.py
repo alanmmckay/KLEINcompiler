@@ -155,7 +155,7 @@ class Scanner:
             raise LexicalError(msg, self.program_str, self.pos)
         return int(self.program_str[start: self.pos])
 
-    def skip_comment(self):
+    def skip_comment(self):#treat line whitespace
         while self.pos < len(self.program_str):
             if self.program_str[self.pos] == '*':
                 self.pos += 1
@@ -167,3 +167,9 @@ class Scanner:
         if self.pos >= len(self.program_str):
             self.pos -= 1
         return
+    
+    def get_program_string(self):
+        return self.program_str
+    
+    def get_current_line(self):
+        return self.line
