@@ -1,7 +1,6 @@
 from enum import Enum
 from src.k_token import Token, TokenType
 
-
 class NonTerminal(Enum):
     Program = 0
     Definitions = 1
@@ -92,9 +91,11 @@ class StaticTerminal():
         elif(self.value == "print"):
             self.value = Terminal.Print
         else:
-            print(self.value)
-            raise ValueError("Error in StaticTerminal Class!")
-        
+            msg = "Error in StaticTerminal class.\n"
+            msg += "Token: {}\n".format(token)
+            raise ValueError(msg)
+            
+
 parse_table = {
                (NonTerminal.Program, Terminal.Function): [NonTerminal.Definitions],
                (NonTerminal.Definitions, Terminal.Function): [NonTerminal.Def, NonTerminal.Definitions],
@@ -190,8 +191,3 @@ parse_table = {
                (NonTerminal.Literal, TokenType.BOOLEAN): [TokenType.BOOLEAN],
                (NonTerminal.Print_Statement, Terminal.Print): [TokenType.KEYWORD, TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER]
 }
-               
-               
-               
-               
-                                                       
