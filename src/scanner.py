@@ -32,9 +32,10 @@ class Scanner:
     # --------------------------------------------------------
 
     def get_next_token(self):
-        self.skip_whitespace()
-        self.skip_comment()
-        self.skip_whitespace()
+        #self.skip_whitespace()
+        #self.skip_comment()
+        #self.skip_whitespace()
+        self.skip_irrelevant()
         # This would be the state to handle end of file.
         if self.pos >= len(self.program_str):
             return Token(TokenType.EOF)
@@ -120,10 +121,13 @@ class Scanner:
     # --------------------------------------------------------
 
     def skip_whitespace(self):
-        while self.pos < len(self.program_str) and \
-                self.is_whitespace(self.program_str[self.pos]):
-            self.pos += 1
-        return
+        if(self.pos < len(self.program_str)):
+            while self.pos < len(self.program_str) and \
+                    self.is_whitespace(self.program_str[self.pos]):
+                self.pos += 1
+            return -1
+        else:
+            return 1
 
     def is_whitespace(self, ch):
         if ch == '\n':
@@ -159,18 +163,30 @@ class Scanner:
                     self.pos += 1
                     self.pos += 1
                     while(self.pos < len(self.program_str)):
+                        if(self.program_str[self.pos] == '\n'):
+                            self.line += 1
                         if(self.program_str[self.pos] == '*'):
                             self.pos += 1
                             if self.program_str[self.pos] == ')':
                                 self.pos += 1
-                                return 1
+                                return -1
                         else:
                             self.pos += 1
                     if self.pos >= len(self.program_str):
                         self.pos -= 1
-                    return 1
+                    return -1
                 else:
-                    return 0
+                    return 1
+        return 2
+       
+    def skip_irrelevant(self):
+        varWhiteSpace = 0
+        varCommentSpace = 0
+        while(varWhiteSpace < 2 and varCommentSpace < 2):
+            print('yes')
+            varWhiteSpace += self.skip_whitespace()
+            varCommentSpace += self.skip_comment()
+                
        
     def get_program_string(self):
         return self.program_str
