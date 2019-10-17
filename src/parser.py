@@ -35,7 +35,8 @@ class Parser:
                 if A == t.token_type:
                     pop(stack)
                 else:
-                    msg = 'token mismatch: {} and {}'
+                    msg = "Error on line "+str(self.scanner.get_current_line())+"\n"
+                    msg += 'token mismatch: {} and {}'
                     msg = msg.format(A,t)
                     raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
             elif isinstance(A, NonTerminal):
@@ -53,16 +54,19 @@ class Parser:
                     pop(stack)
                     push_rule(rule, stack)
                 else:
-                    msg = 'cannot expand {} on {}'
+                    msg = "Error on line "+str(self.scanner.get_current_line())+"\n"
+                    msg += 'cannot expand {} on {}'
                     msg = msg.format(A,t)
                     raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
             else:
-                msg = 'invalid item on stack: {}'
+                msg = "Error on line "+str(self.scanner.get_current_line())+"\n"
+                msg += 'invalid item on stack: {}'
                 msg = msg.format(A)
                 raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
             self.debug_stack_string += "\n"
         if not t.is_eof():
-            msg = 'unexpected token at end: {}'
+            msg = "Error on line "+str(self.scanner.get_current_line())+"\n"
+            msg += 'unexpected token at end: {}'
             msg = msg.format(t)
             raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
 
