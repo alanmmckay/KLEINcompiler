@@ -5,17 +5,11 @@ from src.errors import SemanticError
 
 
 class ASTnode(object):
-    def __init__(self, lst, semantic_stack):
-
-        pass
+    pass
 
 
 class Program(ASTnode):
-    def __init__(self, lst, semantic_stack):
-        pass
-
-    def __str__(self):
-        pass
+    pass
 
 
 class Definitions(ASTnode):

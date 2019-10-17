@@ -43,6 +43,10 @@ class Parser:
                 self.debug_stack_string += "Token Value: " + str(t.token_value) + "\n"
                 if A == t.token_type:
                     pop(parse_stack)
+                    #####################################
+                    if t.is_number() or t.is_word():
+                        push(t.value(), semantic_stack)
+                    #####################################
                 else:
                     msg = 'token mismatch: {} and {}'
                     msg = msg.format(A, t)
@@ -67,9 +71,15 @@ class Parser:
                     msg = msg.format(A, t)
                     raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
 
+            ################################################
             elif issubclass(A, AST_node.ASTnode):
                 pop(parse_stack)
-                push(A, semantic_stack)
+
+                # need some sort of action in here, talks about it in session
+                # 14 class notes
+
+                # push(A, semantic_stack)
+            ###############################################
 
             else:
                 msg = 'invalid item on parse_stack: {}'
@@ -81,9 +91,16 @@ class Parser:
             msg = msg.format(t)
             raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
 
+        #################################################
+        elif len(semantic_stack) != 1:
+            print("hello")
+            msg = 'unexpected number of AST nodes: {}'
+            # raise ParseError()
+
         else:
-            #print statement here for a check
+            # print statement here for a check
             print(semantic_stack)
-            return pop(semantic_stack)
+            return top(semantic_stack)
+        ################################################
 
         # return True
