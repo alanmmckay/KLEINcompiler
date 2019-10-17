@@ -22,8 +22,6 @@ class Parser:
         self.debug_stack_string = ""
 
     def parse(self):
-        # this initial peek kicks the NoneType that's created by comments out
-        self.scanner.peek()
         stack = []
         push_rule([NonTerminal.Program, TokenType.EOF], stack)
         while stack:
