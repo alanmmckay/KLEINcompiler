@@ -1,17 +1,17 @@
 import sys
 import os
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.errors import SemanticError
 
 
 class ASTnode(object):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
+
         pass
 
 
 class Program(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -19,7 +19,7 @@ class Program(ASTnode):
 
 
 class Definitions(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __iter__(self):
@@ -30,7 +30,7 @@ class Definitions(ASTnode):
 
 
 class Function(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -38,7 +38,7 @@ class Function(ASTnode):
 
 
 class Formals(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __iter__(self):
@@ -49,7 +49,7 @@ class Formals(ASTnode):
 
 
 class Formal(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -57,7 +57,7 @@ class Formal(ASTnode):
 
 
 class Body(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -65,7 +65,8 @@ class Body(ASTnode):
 
 
 class PrintStatement(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
+
         pass
 
     def __str__(self):
@@ -73,7 +74,7 @@ class PrintStatement(ASTnode):
 
 
 class LessThan(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -81,7 +82,7 @@ class LessThan(ASTnode):
 
 
 class EqualTo(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -89,7 +90,7 @@ class EqualTo(ASTnode):
 
 
 class OrExpr(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -97,7 +98,7 @@ class OrExpr(ASTnode):
 
 
 class PlusExpr(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -105,7 +106,7 @@ class PlusExpr(ASTnode):
 
 
 class MinusExpr(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -113,7 +114,7 @@ class MinusExpr(ASTnode):
 
 
 class AndExpr(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -121,7 +122,7 @@ class AndExpr(ASTnode):
 
 
 class TimesExpr(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -129,7 +130,7 @@ class TimesExpr(ASTnode):
 
 
 class DivideExpr(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -137,7 +138,7 @@ class DivideExpr(ASTnode):
 
 
 class IfStatement(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -145,7 +146,7 @@ class IfStatement(ASTnode):
 
 
 class NotExpr(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -153,7 +154,7 @@ class NotExpr(ASTnode):
 
 
 class FunctionCall(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -161,7 +162,7 @@ class FunctionCall(ASTnode):
 
 
 class Negate(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -169,7 +170,7 @@ class Negate(ASTnode):
 
 
 class Actuals(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -177,7 +178,7 @@ class Actuals(ASTnode):
 
 
 class Nea(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -185,7 +186,7 @@ class Nea(ASTnode):
 
 
 class Identifier(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -193,7 +194,7 @@ class Identifier(ASTnode):
 
 
 class NumberLiteral(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -201,7 +202,7 @@ class NumberLiteral(ASTnode):
 
 
 class BooleanLiteral(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
@@ -209,7 +210,7 @@ class BooleanLiteral(ASTnode):
 
 
 class Type(ASTnode):
-    def __init__(self, last, semanticStack):
+    def __init__(self, lst, semantic_stack):
         pass
 
     def __str__(self):
