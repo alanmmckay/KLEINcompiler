@@ -3,6 +3,7 @@ from src.errors import LexicalError
 
 keywords = ["function", "boolean", "if", "then", "else", "not", "and", "or", "integer", "print"]
 boolean = ["true", "false"]
+# take print out of keywords if we implement this:
 # primitive = ["main", "print"]
 
 
@@ -32,7 +33,8 @@ class Scanner:
 
     def get_next_token(self):
         self.skip_whitespace()
-
+        self.skip_comment()
+        self.skip_whitespace()
         # This would be the state to handle end of file.
         if self.pos >= len(self.program_str):
             return Token(TokenType.EOF)
@@ -74,12 +76,7 @@ class Scanner:
         # --------------------------------------------------
         if self.program_str[self.pos] == '(':
             self.pos += 1
-            if self.program_str[self.pos] == '*':
-                self.pos += 1
-                self.skip_comment()
-                return
-            else:
-                return Token(TokenType.DELIMETER, "(")
+            return Token(TokenType.DELIMETER, "(")
 
         if self.program_str[self.pos] == ')':
             self.pos += 1
@@ -156,18 +153,26 @@ class Scanner:
         return int(self.program_str[start: self.pos])
 
     def skip_comment(self):#treat line whitespace
-        while self.pos < len(self.program_str):
-            if self.program_str[self.pos] == '*':
-                self.pos += 1
-                if self.program_str[self.pos] == ')':
+        if(self.pos < len(self.program_str)):
+            if(self.program_str[self.pos] == '('):
+                if(self.program_str[self.pos+1] == '*'):
                     self.pos += 1
-                    return
-            else:
-                self.pos += 1
-        if self.pos >= len(self.program_str):
-            self.pos -= 1
-        return
-    
+                    self.pos += 1
+                    while(self.pos < len(self.program_str)):
+                        if(self.program_str[self.pos] == '*'):
+                            self.pos += 1
+                            if self.program_str[self.pos] == ')':
+                                print(self.program_str[self.pos])
+                                self.pos += 1
+                                return 1
+                        else:
+                            self.pos += 1
+                    if self.pos >= len(self.program_str):
+                        self.pos -= 1
+                    return 1
+                else:
+                    return 0
+       
     def get_program_string(self):
         return self.program_str
     

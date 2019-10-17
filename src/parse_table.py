@@ -26,26 +26,26 @@ class NonTerminal(Enum):
     Print_Statement = 21
 
 class Terminal(Enum):
-    Function = 1
-    OpenParen = 2
-    CloseParen = 3
-    Colon = 4
-    Comma = 5
-    Integer = 6
-    Boolean = 7
-    LessThan = 8
-    Equals = 9
-    Or = 10
-    Plus = 11
-    Minus = 12
-    And = 13
-    Mult = 14
-    Divide = 15
-    If = 16
-    Then = 17
-    Else = 18
-    Not = 19
-    Print = 20 
+    Function = 100
+    OpenParen = 200
+    CloseParen = 300
+    Colon = 400
+    Comma = 500
+    Integer = 600
+    Boolean = 700
+    LessThan = 800
+    Equals = 900
+    Or = 1000
+    Plus = 1100
+    Minus = 1200
+    And = 1300
+    Mult = 1400
+    Divide = 1500
+    If = 1600
+    Then = 1700
+    Else = 1800
+    Not = 1900
+    Print = 2000
 
 class StaticTerminal():
     def __init__(self, token):
@@ -158,14 +158,14 @@ parse_table = {
                (NonTerminal.Term_t, Terminal.Or): [],
                (NonTerminal.Term_t, Terminal.Plus): [],
                (NonTerminal.Term_t, Terminal.Minus): [],
-               (NonTerminal.Term_t, Terminal.And): [TokenType.OPERATORS, NonTerminal.Term],
+               (NonTerminal.Term_t, Terminal.And): [TokenType.KEYWORD, NonTerminal.Term],
                (NonTerminal.Term_t, Terminal.Mult): [TokenType.OPERATORS, NonTerminal.Term],
                (NonTerminal.Term_t, Terminal.Divide): [TokenType.OPERATORS, NonTerminal.Term],
                (NonTerminal.Factor, Terminal.OpenParen): [TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER],
                (NonTerminal.Factor, TokenType.NUMBER): [NonTerminal.Literal],
                (NonTerminal.Factor, TokenType.BOOLEAN): [NonTerminal.Literal],
                (NonTerminal.Factor, Terminal.Minus): [TokenType.OPERATORS, NonTerminal.Factor],
-               (NonTerminal.Factor, Terminal.If): [TokenType.KEYWORD, NonTerminal.Expr, TokenType.KEYWORD, NonTerminal.Expr, TokenType.KEYWORD],
+               (NonTerminal.Factor, Terminal.If): [TokenType.KEYWORD, NonTerminal.Expr, TokenType.KEYWORD, NonTerminal.Expr, TokenType.KEYWORD, NonTerminal.Expr],
                (NonTerminal.Factor, Terminal.Not): [TokenType.KEYWORD, NonTerminal.Factor],
                (NonTerminal.Factor, TokenType.WORD): [TokenType.WORD, NonTerminal.Factor_t],
                (NonTerminal.Factor_t, Terminal.OpenParen): [TokenType.DELIMETER, NonTerminal.Actuals, TokenType.DELIMETER],
@@ -184,10 +184,52 @@ parse_table = {
                (NonTerminal.Nonempty_Actuals, Terminal.If): [NonTerminal.Expr, NonTerminal.Nonempty_Actuals_t],
                (NonTerminal.Nonempty_Actuals, Terminal.Not): [NonTerminal.Expr, NonTerminal.Nonempty_Actuals_t],
                (NonTerminal.Nonempty_Actuals, TokenType.WORD): [NonTerminal.Expr, NonTerminal.Nonempty_Actuals_t],
-               (NonTerminal.Nonempty_Actuals_t, Terminal.OpenParen): [],
+               (NonTerminal.Nonempty_Actuals_t, Terminal.CloseParen): [],
                (NonTerminal.Nonempty_Actuals_t, Terminal.Comma): [TokenType.DELIMETER, NonTerminal.Nonempty_Actuals],
-               (NonTerminal.Nonempty_Actuals_t, Terminal.OpenParen): [],
                (NonTerminal.Literal, TokenType.NUMBER): [TokenType.NUMBER],
                (NonTerminal.Literal, TokenType.BOOLEAN): [TokenType.BOOLEAN],
-               (NonTerminal.Print_Statement, Terminal.Print): [TokenType.KEYWORD, TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER]
+               (NonTerminal.Print_Statement, Terminal.Print): [TokenType.KEYWORD, TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER],
+               (NonTerminal.Program, TokenType.EOF):[],
+               (NonTerminal.Nonempty_Formals, Terminal.CloseParen): [NonTerminal.Formal, NonTerminal.Nonempty_Formals_t],
+               (NonTerminal.Expr_p, Terminal.Or): [],
+               (NonTerminal.Expr_p, Terminal.Plus): [],
+               (NonTerminal.Expr_p, Terminal.Minus): [],
+               #(NonTerminal.Expr_p, Terminal.And): [],
+               (NonTerminal.Expr_p, TokenType.EOF): [],
+               (NonTerminal.Simple_Expr_t , Terminal.And): [],
+               (NonTerminal.Simple_Expr_t , Terminal.Mult): [],
+               (NonTerminal.Simple_Expr_t , Terminal.Divide): [],
+               #(NonTerminal.Simple_Expr_t , Terminal.Or): [],
+               #(NonTerminal.Simple_Expr_t , Terminal.Plus): [],
+               #(NonTerminal.Simple_Expr_t , Terminal.Minus): [],
+               (NonTerminal.Simple_Expr_t , Terminal.And): [],
+               (NonTerminal.Simple_Expr_t , Terminal.Function): [],
+               (NonTerminal.Simple_Expr_t , Terminal.Then): [],
+               (NonTerminal.Simple_Expr_t , Terminal.Else): [],
+               (NonTerminal.Simple_Expr_t , Terminal.CloseParen): [],
+               (NonTerminal.Simple_Expr_t , Terminal.Comma): [],
+               (NonTerminal.Simple_Expr_t , TokenType.EOF): [],
+               (NonTerminal.Term_t, Terminal.Function): [],
+               (NonTerminal.Term_t, Terminal.CloseParen): [],
+               (NonTerminal.Term_t, Terminal.Comma): [],
+               (NonTerminal.Term_t, Terminal.LessThan): [],
+               (NonTerminal.Term_t, Terminal.Equals): [],
+               (NonTerminal.Term_t, Terminal.Then): [],
+               (NonTerminal.Term_t, Terminal.Else): [],
+               (NonTerminal.Term_t, TokenType.EOF): [],
+               (NonTerminal.Factor_t, Terminal.Or): [],
+               (NonTerminal.Factor_t, Terminal.Plus): [],
+               (NonTerminal.Factor_t, Terminal.Minus): [],
+               (NonTerminal.Factor_t, Terminal.LessThan): [],
+               (NonTerminal.Factor_t, Terminal.Equals): [],
+               (NonTerminal.Factor_t, Terminal.Function): [],
+               (NonTerminal.Factor_t, Terminal.Then): [],
+               (NonTerminal.Factor_t, Terminal.Else): [],
+               (NonTerminal.Factor_t, Terminal.CloseParen): [],
+               (NonTerminal.Factor_t, Terminal.Comma): [],
+               (NonTerminal.Factor_t, TokenType.EOF): [],
+               (NonTerminal.Actuals, Terminal.OpenParen): [NonTerminal.Nonempty_Actuals],
+               (NonTerminal.Nonempty_Actuals, Terminal.OpenParen): [NonTerminal.Expr, NonTerminal.Nonempty_Actuals_t],
+               (NonTerminal.Body, TokenType.EOF): []
 }
+#should there be a (NonTerminal.Program, TokenType.EOF) index?
