@@ -183,7 +183,6 @@ class Scanner:
         varWhiteSpace = 0
         varCommentSpace = 0
         while(varWhiteSpace < 2 and varCommentSpace < 2):
-            print('yes')
             varWhiteSpace += self.skip_whitespace()
             varCommentSpace += self.skip_comment()
                 
