@@ -162,7 +162,6 @@ class Scanner:
                         if(self.program_str[self.pos] == '*'):
                             self.pos += 1
                             if self.program_str[self.pos] == ')':
-                                print(self.program_str[self.pos])
                                 self.pos += 1
                                 return 1
                         else:
