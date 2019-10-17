@@ -21,7 +21,7 @@ p = Parser(s)
 result = p.parse()
 
 if result:
-    print("Valid Program")
+    print(str(result))
 
 else:
     print("Invalid Program")

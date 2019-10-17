@@ -2,7 +2,8 @@ from src.scanner import Scanner
 from src.errors import ParseError
 from src.parse_table import NonTerminal, Terminal, StaticTerminal, parse_table
 from src.k_token import Token, TokenType
-from src.AST_node import ASTnode
+# from src.AST_node import ASTnode
+from src import AST_node
 
 
 def top(stack):
@@ -16,6 +17,10 @@ def pop(stack):
 def push_rule(lst, stack):
     for element in reversed(lst):
         stack.append(element)
+
+
+def push(lst, stack):
+    stack.append(lst)
 
 
 class Parser:
@@ -38,6 +43,10 @@ class Parser:
                 self.debug_stack_string += "Token Value: " + str(t.token_value) + "\n"
                 if A == t.token_type:
                     pop(parse_stack)
+                    #####################################
+                    if t.is_number() or t.is_word():
+                        push(t.value(), semantic_stack)
+                    #####################################
                 else:
                     msg = 'token mismatch: {} and {}'
                     msg = msg.format(A, t)
@@ -62,12 +71,16 @@ class Parser:
                     msg = msg.format(A, t)
                     raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
 
-            ##############################
-            elif issubclass(A, ASTnode):
+            ################################################
+            elif issubclass(A, AST_node.ASTnode):
                 pop(parse_stack)
-                push_rule(rule,semantic_stack)
 
-            #################################
+                # need some sort of action in here, talks about it in session
+                # 14 class notes
+
+                # push(A, semantic_stack)
+            ###############################################
+
             else:
                 msg = 'invalid item on parse_stack: {}'
                 msg = msg.format(A)
@@ -78,10 +91,16 @@ class Parser:
             msg = msg.format(t)
             raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
 
-        ##################################
+        #################################################
+        elif len(semantic_stack) != 1:
+            print("hello")
+            msg = 'unexpected number of AST nodes: {}'
+            # raise ParseError()
+
         else:
-            return pop(semantic_stack)
+            # print statement here for a check
+            print(semantic_stack)
+            return top(semantic_stack)
+        ################################################
 
-        ##################################
-
-        return True
+        # return True
