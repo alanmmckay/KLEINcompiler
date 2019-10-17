@@ -3,8 +3,8 @@
 first(PRINT-STATEMENT) = {print}
 first(LITERAL) = {<NUMBER>, <BOOLEAN>}
 first(NONEMPTYACTUALS-TAIL) = {,, ε}
-first(NONEMPTYACTUALS) = {first(EXPR)} = {if, not, -, identifier, <NUMBER>, <BOOLEAN>}
-first(ACTUALS) = {first(NONEMPTYACTUALS), ε} = {if, not -, identifier, <NUMBER>, <BOOLEAN>, ε}
+first(NONEMPTYACTUALS) = {first(EXPR)} = {if, not, -, identifier, <NUMBER>, <BOOLEAN>, (}
+first(ACTUALS) = {first(NONEMPTYACTUALS), ε} = {if, not -, identifier, <NUMBER>, <BOOLEAN>, (, ε}
 first(FACTOR-TAIL) = {(, ε}
 first(FACTOR) = {if, not, -, identifier, first(LITERAL), (} = {if, not, -, identifier, <NUMBER>, <BOOLEAN>, (}
 first(TERM-TAIL) = {and, *, /, ε}
@@ -20,30 +20,32 @@ first(NONEMPTYFORMALS-TAIL) = {,, ε}
 first(NONEMPTYFORMALS) = {first(FORMAL)} = {identifier}
 first(FORMALS) = {first(NONEMPTYFORMALS), ε) = {identifier, ε}
 first(DEF) = {function}
-first(DEFINITIONS) = {first(DEF)} = {function}
-first(PROGRAM) = {first(DEFINITIONS)} = {function}
+first(DEFINITIONS) = {first(DEF), ε} = {function, ε}
+first(PROGRAM) = {first(DEFINITIONS)} = {function, ε}
 
 --- FOLLOW SETS ---
 
 follow(PROGRAM) = {$}
 follow(DEFINITIONS) = {follow(PROGRAM)} = {$}
-follow(DEF) = {first(DEFINITIONS)} = {function}
+follow(DEF) = {first(DEFINITIONS), follow(DEFINITIONS)} = {function, $}
 follow(FORMALS) = {)}
 follow(NONEMPTYFORMALS) = {follow(FORMALS), follow(NONEMPTYFORMALS-TAIL)} = {)}
 follow(NONEMPTYFORMALS-TAIL) = {follow(NONEMPTYFORMALS)} = {)}
-follow(FORMAL) = {first(NONEMPTYFORMALS-TAIL)} = {,}
-follow(BODY) = {follow(DEF)} = {function}
-follow(TYPE) = {follow(FORMAL), first(BODY)} = {,, print, if, not, -, identifier, <NUMBER>, <BOOLEAN>, (}
-follow(EXPR) = {follow(BODY), follow(EXPR-TAIL), then, else, follow(FACTOR), ), first(NON-EMPTYACTUALS-TAIL)} = {function, then, else, follow(FACTOR), ), ,}
-follow(EXPR-TAIL) = {follow(EXPR)} = {function, then, else, follow(FACTOR), ), ,}
-follow(SIMPLE-EXPR) = {first(EXPR-TAIL), follow(SIMPLE-EXPR-TAIL)} = {<, =}
-follow(SIMPLE-EXPR-TAIL) = {follow(SIMPLE-EXPR)} = {<, =}
-follow(TERM) = {first(SIMPLE-EXPR-TAIL), follow(TERM-TAIL)} = {or, +, -}
-follow(TERM-TAIL) = {follow(TERM)} = {or, +, -}
-follow(FACTOR) = {first(TERM-TAIL)} = {and, *, /}
-follow(FACTOR-TAIL) = {follow(FACTOR) = {and, *, /}
+follow(FORMAL) = {first(NONEMPTYFORMALS-TAIL). follow(NONEMPTYFORMALS)} = {,, )}
+follow(BODY) = {follow(DEF)} = {function, $}
+follow(TYPE) = {follow(FORMAL), first(BODY)} = {,, ), print, if, not, -, identifier, <NUMBER>, <BOOLEAN>, (}
+
+follow(EXPR) = {follow(BODY), follow(EXPR-TAIL), then, else, follow(FACTOR), ), first(NON-EMPTYACTUALS-TAIL), follow(NONEMPTYACTUALS)} = {function, $, then, else, follow(FACTOR), ), ,}
+
+follow(EXPR-TAIL) = {follow(EXPR)} = {function, $, then, else, follow(FACTOR), ), ,}
+follow(SIMPLE-EXPR) = {first(EXPR-TAIL), follow(SIMPLE-EXPR-TAIL), follow(EXPR)} = {<, =, and, *, /, or, +, -, function, $, then, else, ), , }
+follow(SIMPLE-EXPR-TAIL) = {follow(SIMPLE-EXPR)} = {<, =, and, *, /, or, +, -, function, $, then, else, ), ,}
+follow(TERM) = {first(SIMPLE-EXPR-TAIL), follow(TERM-TAIL), follow(SIMPLE-EXPR)} = {and, *, /, or, +, -, <, =, function, $, then, else, ), ,}
+follow(TERM-TAIL) = {follow(TERM)} = {and, *, /, or, +, -, <, =, function, $, then, else, ), ,}
+follow(FACTOR) = {first(TERM-TAIL), follow(TERM)} = {and, *, /, or, +, -, <, =, function, $, then, else, ), ,}
+follow(FACTOR-TAIL) = {follow(FACTOR)} = {and, *, /, or, +, -, <, =, function, $, then, else, ), ,}
 follow(ACTUALS) = {)}
 follow(NONEMPTYACTUALS) = {follow(ACTUALS), follow(NONEMPTYACTUALS-TAIL)} = {)}
 follow(NONEMPTYACTUALS-TAIL) = {follow(NONEMPTYACTUALS)} = {)}
-follow(LITERAL) = {follow(FACTOR)} = {and, *, /}
+follow(LITERAL) = {follow(FACTOR)} = {and, *, /, or, +, -, <, =, function, $, then, else, ), ,}
 follow(PRINT-STATEMENT) = {first(BODY)} = {print, if, not, -, identifier, <NUMBER>, <BOOLEAN>, (}
