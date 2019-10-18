@@ -4,6 +4,23 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.errors import SemanticError
 
 
+def top(stack):
+    return stack[-1]
+
+
+def pop(stack):
+    stack.pop()
+
+
+def push_rule(lst, stack):
+    for element in reversed(lst):
+        stack.append(element)
+
+
+def push(lst, stack):
+    stack.append(lst)
+
+
 class ASTnode(object):
     pass
 
@@ -12,8 +29,8 @@ class Program(ASTnode):
     pass
 
 
-class Definitions(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class DefinitionsNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __iter__(self):
@@ -23,16 +40,16 @@ class Definitions(ASTnode):
         pass
 
 
-class Function(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class FunctionNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class Formals(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class FormalsNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __iter__(self):
@@ -42,170 +59,176 @@ class Formals(ASTnode):
         pass
 
 
-class Formal(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class FormalNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class Body(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class BodyNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class PrintStatement(ASTnode):
-    def __init__(self, lst, semantic_stack):
-
+class PrintStatementNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class LessThan(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class LessThanNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class EqualTo(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class EqualToNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class OrExpr(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class OrNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class PlusExpr(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class PlusNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class MinusExpr(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class MinusNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class AndExpr(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class AndNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class TimesExpr(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class MultiplyNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class DivideExpr(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class DivisionNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class IfStatement(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class IfNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class NotExpr(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class NotNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class FunctionCall(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class FunctionCallNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class Negate(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class NegationNode(ASTnode):
+    def __init__(self, semantic_stack):
         pass
 
     def __str__(self):
         pass
 
 
-class Actuals(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class ActualsNode(ASTnode):
+    def __init__(self, semantic_stack):
+        list_of_actuals = []
+        while isinstance(top(semantic_stack), NonEmptyActualsNode):
+            list_of_actuals.add(pop(semantic_stack))
+        push(list_of_actuals, semantic_stack)
+    def __str__(self):
+        pass
+
+
+class NonEmptyActualsNode(ASTnode):
+    def __init__(self, semantic_stack):
+        #this merely exists?
         pass
 
     def __str__(self):
         pass
 
 
-class Nea(ASTnode):
-    def __init__(self, lst, semantic_stack):
-        pass
+class IdentifierNode(ASTnode):
+    def __init__(self, semantic_stack):
+        self.value = top(semantic_stack)
+        pop(semantic_stack)
 
     def __str__(self):
         pass
 
 
-class Identifier(ASTnode):
-    def __init__(self, lst, semantic_stack):
+class NumberLiteralNode(ASTnode):
+    def __init__(self, semantic_stack):
+        self.value = top(semantic_stack)
+        pop(semantic_stack)
+        
+    def __str__(self):
         pass
+
+
+class BooleanLiteralNode(ASTnode):
+    def __init__(self, semantic_stack):
+        self.value = top(semantic_stack)
+        pop(semantic_stack)
 
     def __str__(self):
         pass
 
 
-class NumberLiteral(ASTnode):
-    def __init__(self, lst, semantic_stack):
-        pass
-
-    def __str__(self):
-        pass
-
-
-class BooleanLiteral(ASTnode):
-    def __init__(self, lst, semantic_stack):
-        pass
-
-    def __str__(self):
-        pass
-
-
-class Type(ASTnode):
-    def __init__(self, lst, semantic_stack):
-        pass
+class TypeNode(ASTnode):
+    def __init__(self, semantic_stack):
+        self.value = top(semantic_stack)
+        pop(semantic_stack)
 
     def __str__(self):
         pass
