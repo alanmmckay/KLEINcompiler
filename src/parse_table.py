@@ -1,6 +1,6 @@
 from enum import Enum
 from src.k_token import Token, TokenType
-from src import AST_node
+from src.AST_node import *
 
 
 class NonTerminal(Enum):
@@ -29,27 +29,54 @@ class NonTerminal(Enum):
 
 
 class Terminal(Enum):
-    Function = 100
-    OpenParen = 200
-    CloseParen = 300
-    Colon = 400
-    Comma = 500
-    Integer = 600
-    Boolean = 700
-    LessThan = 800
-    Equals = 900
-    Or = 1000
-    Plus = 1100
-    Minus = 1200
-    And = 1300
-    Mult = 1400
-    Divide = 1500
-    If = 1600
-    Then = 1700
-    Else = 1800
-    Not = 1900
-    Print = 2000
+    Function = 0
+    OpenParen = 1
+    CloseParen = 2
+    Colon = 3
+    Comma = 4
+    Integer = 5
+    Boolean = 6
+    LessThan = 7
+    Equals = 8
+    Or = 9
+    Plus = 10
+    Minus = 11
+    And = 12
+    Mult = 13
+    Divide = 14
+    If = 15
+    Then = 16
+    Else = 17
+    Not = 18
+    Print = 19
 
+
+class SemanticAction(Enum):
+    MakeDefinitions = 0
+    MakeIdentifier = 1
+    MakeFunction = 2
+    MakeFormals = 3
+    MakeFormal = 4
+    MakeBody = 5
+    MakeType = 6
+    MakeLessThan = 7
+    MakeEqualTo = 8
+    MakePlus = 9
+    MakeMinus = 10
+    MakeAnd = 11
+    MakeMultiply = 12
+    MakeDivision = 13
+    MakeNegation = 14
+    MakeIf = 15
+    MakeNot = 16
+    MakeFunctionCall = 17
+    MakeActuals = 18
+    MakeNonEmptyActuals = 19
+    MakeNumberLiteral = 20
+    MakeBooleanLiteral = 21
+    MakePrintStatement = 22
+    MakeOr = 23
+    
 
 class StaticTerminal():
     def __init__(self, token):
@@ -98,22 +125,49 @@ class StaticTerminal():
             msg = "Error in StaticTerminal class.\n"
             msg += "Token: {}\n".format(token)
             raise ValueError(msg)
-
+        
+object_factory = {
+    SemanticAction.MakeDefinitions: DefinitionsNode,
+    SemanticAction.MakeIdentifier: IdentifierNode,
+    SemanticAction.MakeFunction: FunctionNode,
+    SemanticAction.MakeFormals: FormalsNode,
+    SemanticAction.MakeFormal: FormalNode,
+    SemanticAction.MakeBody: BodyNode,
+    SemanticAction.MakeType: TypeNode,
+    SemanticAction.MakeLessThan: LessThanNode,
+    SemanticAction.MakeEqualTo: EqualToNode,
+    SemanticAction.MakePlus: PlusNode,
+    SemanticAction.MakeMinus: MinusNode,
+    SemanticAction.MakeAnd: AndNode,
+    SemanticAction.MakeMultiply: MultiplyNode,
+    SemanticAction.MakeDivision: DivisionNode,
+    SemanticAction.MakeNegation: NegationNode,
+    SemanticAction.MakeIf: IfNode,
+    SemanticAction.MakeNot: NotNode,
+    SemanticAction.MakeFunctionCall: FunctionCallNode,
+    SemanticAction.MakeActuals: ActualsNode,
+    SemanticAction.MakeNonEmptyActuals: NonEmptyActualsNode,
+    SemanticAction.MakeNumberLiteral: NumberLiteralNode,
+    SemanticAction.MakeBooleanLiteral: BooleanLiteralNode,
+    SemanticAction.MakePrintStatement: PrintStatementNode,
+    SemanticAction.MakeOr: OrNode
+}    
+            
 
 parse_table = {
-    (NonTerminal.Program, Terminal.Function): [NonTerminal.Definitions, AST_node.Definitions],
+    (NonTerminal.Program, Terminal.Function): [NonTerminal.Definitions, SemanticAction.MakeDefinitions],
     (NonTerminal.Definitions, Terminal.Function): [NonTerminal.Def, NonTerminal.Definitions],
     (NonTerminal.Definitions, TokenType.EOF): [],
-    (NonTerminal.Def, Terminal.Function): [TokenType.KEYWORD, TokenType.WORD, AST_node.Identifier, TokenType.DELIMETER,
+    (NonTerminal.Def, Terminal.Function): [TokenType.KEYWORD, TokenType.WORD, SemanticAction.MakeIdentifier, TokenType.DELIMETER,
                                            NonTerminal.Formals, TokenType.DELIMETER, TokenType.DELIMETER,
-                                           NonTerminal.Type, NonTerminal.Body, AST_node.Function],
-    (NonTerminal.Formals, TokenType.WORD): [NonTerminal.Nonempty_Formals, AST_node.Formals],
+                                           NonTerminal.Type, NonTerminal.Body, SemanticAction.MakeFunction],
+    (NonTerminal.Formals, TokenType.WORD): [NonTerminal.Nonempty_Formals, SemanticAction.MakeFormals],
     (NonTerminal.Formals, Terminal.CloseParen): [],
     (NonTerminal.Nonempty_Formals, TokenType.WORD): [NonTerminal.Formal, NonTerminal.Nonempty_Formals_t],
     (NonTerminal.Nonempty_Formals_t, Terminal.Comma): [TokenType.DELIMETER, NonTerminal.Nonempty_Formals],
     (NonTerminal.Nonempty_Formals_t, Terminal.CloseParen): [],
-    (NonTerminal.Formal, TokenType.WORD): [TokenType.WORD, AST_node.Identifier, TokenType.DELIMETER, NonTerminal.Type,
-                                           AST_node.Formal],
+    (NonTerminal.Formal, TokenType.WORD): [TokenType.WORD, SemanticAction.MakeIdentifier, TokenType.DELIMETER, NonTerminal.Type,
+                                           SemanticAction.MakeFormal],
     (NonTerminal.Body, Terminal.OpenParen): [NonTerminal.Expr],
     (NonTerminal.Body, Terminal.Minus): [NonTerminal.Expr],
     (NonTerminal.Body, Terminal.If): [NonTerminal.Expr],
@@ -121,9 +175,9 @@ parse_table = {
     (NonTerminal.Body, TokenType.NUMBER): [NonTerminal.Expr],
     (NonTerminal.Body, TokenType.BOOLEAN): [NonTerminal.Expr],
     (NonTerminal.Body, TokenType.WORD): [NonTerminal.Expr],
-    (NonTerminal.Body, Terminal.Print): [NonTerminal.Print_Statement, NonTerminal.Body, AST_node.Body],
-    (NonTerminal.Type, Terminal.Integer): [TokenType.KEYWORD, AST_node.Type],
-    (NonTerminal.Type, Terminal.Boolean): [TokenType.KEYWORD, AST_node.Type],
+    (NonTerminal.Body, Terminal.Print): [NonTerminal.Print_Statement, NonTerminal.Body, SemanticAction.MakeBody],
+    (NonTerminal.Type, Terminal.Integer): [TokenType.KEYWORD, SemanticAction.MakeType],
+    (NonTerminal.Type, Terminal.Boolean): [TokenType.KEYWORD, SemanticAction.MakeType],
     (NonTerminal.Expr, Terminal.OpenParen): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
     (NonTerminal.Expr, TokenType.NUMBER): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
     (NonTerminal.Expr, TokenType.BOOLEAN): [NonTerminal.Simple_Expr, NonTerminal.Expr_p],
@@ -134,8 +188,8 @@ parse_table = {
     (NonTerminal.Expr_p, Terminal.Function): [],
     (NonTerminal.Expr_p, Terminal.CloseParen): [],
     (NonTerminal.Expr_p, Terminal.Comma): [],
-    (NonTerminal.Expr_p, Terminal.LessThan): [TokenType.OPERATORS, NonTerminal.Expr, AST_node.LessThan],
-    (NonTerminal.Expr_p, Terminal.Equals): [TokenType.OPERATORS, NonTerminal.Expr, AST_node.EqualTo],
+    (NonTerminal.Expr_p, Terminal.LessThan): [TokenType.OPERATORS, NonTerminal.Expr, SemanticAction.MakeLessThan],
+    (NonTerminal.Expr_p, Terminal.Equals): [TokenType.OPERATORS, NonTerminal.Expr, SemanticAction.MakeEqualTo],
     (NonTerminal.Expr_p, Terminal.And): [],
     (NonTerminal.Expr_p, Terminal.Mult): [],
     (NonTerminal.Expr_p, Terminal.Divide): [],
@@ -150,9 +204,9 @@ parse_table = {
     (NonTerminal.Simple_Expr, TokenType.WORD): [NonTerminal.Term, NonTerminal.Simple_Expr_t],
     (NonTerminal.Simple_Expr_t, Terminal.LessThan): [],
     (NonTerminal.Simple_Expr_t, Terminal.Equals): [],
-    (NonTerminal.Simple_Expr_t, Terminal.Or): [TokenType.KEYWORD, NonTerminal.Simple_Expr, AST_node.OrExpr],
-    (NonTerminal.Simple_Expr_t, Terminal.Plus): [TokenType.OPERATORS, NonTerminal.Simple_Expr, AST_node.PlusExpr],
-    (NonTerminal.Simple_Expr_t, Terminal.Minus): [TokenType.OPERATORS, NonTerminal.Simple_Expr, AST_node.MinusExpr],
+    (NonTerminal.Simple_Expr_t, Terminal.Or): [TokenType.KEYWORD, NonTerminal.Simple_Expr, SemanticAction.MakeOr],
+    (NonTerminal.Simple_Expr_t, Terminal.Plus): [TokenType.OPERATORS, NonTerminal.Simple_Expr, SemanticAction.MakePlus],
+    (NonTerminal.Simple_Expr_t, Terminal.Minus): [TokenType.OPERATORS, NonTerminal.Simple_Expr, SemanticAction.MakeMinus],
     (NonTerminal.Term, Terminal.OpenParen): [NonTerminal.Factor, NonTerminal.Term_t],
     (NonTerminal.Term, TokenType.NUMBER): [NonTerminal.Factor, NonTerminal.Term_t],
     (NonTerminal.Term, TokenType.BOOLEAN): [NonTerminal.Factor, NonTerminal.Term_t],
@@ -163,39 +217,39 @@ parse_table = {
     (NonTerminal.Term_t, Terminal.Or): [],
     (NonTerminal.Term_t, Terminal.Plus): [],
     (NonTerminal.Term_t, Terminal.Minus): [],
-    (NonTerminal.Term_t, Terminal.And): [TokenType.KEYWORD, NonTerminal.Term, AST_node.AndExpr],
-    (NonTerminal.Term_t, Terminal.Mult): [TokenType.OPERATORS, NonTerminal.Term, AST_node.TimesExpr],
-    (NonTerminal.Term_t, Terminal.Divide): [TokenType.OPERATORS, NonTerminal.Term, AST_node.DivideExpr],
+    (NonTerminal.Term_t, Terminal.And): [TokenType.KEYWORD, NonTerminal.Term, SemanticAction.MakeAnd],
+    (NonTerminal.Term_t, Terminal.Mult): [TokenType.OPERATORS, NonTerminal.Term, SemanticAction.MakeMultiply],
+    (NonTerminal.Term_t, Terminal.Divide): [TokenType.OPERATORS, NonTerminal.Term, SemanticAction.MakeDivision],
     (NonTerminal.Factor, Terminal.OpenParen): [TokenType.DELIMETER, NonTerminal.Expr, TokenType.DELIMETER],
     (NonTerminal.Factor, TokenType.NUMBER): [NonTerminal.Literal],
     (NonTerminal.Factor, TokenType.BOOLEAN): [NonTerminal.Literal],
-    (NonTerminal.Factor, Terminal.Minus): [TokenType.OPERATORS, NonTerminal.Factor, AST_node.Negate],
+    (NonTerminal.Factor, Terminal.Minus): [TokenType.OPERATORS, NonTerminal.Factor, SemanticAction.MakeNegation],
     (NonTerminal.Factor, Terminal.If): [TokenType.KEYWORD, NonTerminal.Expr, TokenType.KEYWORD, NonTerminal.Expr,
-                                        TokenType.KEYWORD, NonTerminal.Expr, AST_node.IfStatement],
-    (NonTerminal.Factor, Terminal.Not): [TokenType.KEYWORD, NonTerminal.Factor, AST_node.NotExpr],
-    (NonTerminal.Factor, TokenType.WORD): [TokenType.WORD, AST_node.Identifier, NonTerminal.Factor_t],
-    (NonTerminal.Factor_t, Terminal.OpenParen): [TokenType.DELIMETER, NonTerminal.Actuals, TokenType.DELIMETER, AST_node.FunctionCall],
+                                        TokenType.KEYWORD, NonTerminal.Expr, SemanticAction.MakeIf],
+    (NonTerminal.Factor, Terminal.Not): [TokenType.KEYWORD, NonTerminal.Factor, SemanticAction.MakeNot],
+    (NonTerminal.Factor, TokenType.WORD): [TokenType.WORD, SemanticAction.MakeIdentifier, NonTerminal.Factor_t],
+    (NonTerminal.Factor_t, Terminal.OpenParen): [TokenType.DELIMETER, NonTerminal.Actuals, TokenType.DELIMETER, SemanticAction.MakeFunctionCall],
     (NonTerminal.Factor_t, Terminal.And): [],
     (NonTerminal.Factor_t, Terminal.Mult): [],
     (NonTerminal.Factor_t, Terminal.Divide): [],
-    (NonTerminal.Actuals, TokenType.NUMBER): [NonTerminal.Nonempty_Actuals, AST_node.Actuals],
-    (NonTerminal.Actuals, TokenType.BOOLEAN): [NonTerminal.Nonempty_Actuals, AST_node.Actuals],
-    (NonTerminal.Actuals, Terminal.Minus): [NonTerminal.Nonempty_Actuals, AST_node.Actuals],
-    (NonTerminal.Actuals, Terminal.If): [NonTerminal.Nonempty_Actuals, AST_node.Actuals],
-    (NonTerminal.Actuals, Terminal.Not): [NonTerminal.Nonempty_Actuals, AST_node.Actuals],
-    (NonTerminal.Actuals, TokenType.WORD): [NonTerminal.Nonempty_Actuals, AST_node.Actuals],
-    (NonTerminal.Nonempty_Actuals, TokenType.NUMBER): [NonTerminal.Expr, AST_node.Nea, NonTerminal.Nonempty_Actuals_t],
-    (NonTerminal.Nonempty_Actuals, TokenType.BOOLEAN): [NonTerminal.Expr, AST_node.Nea, NonTerminal.Nonempty_Actuals_t],
-    (NonTerminal.Nonempty_Actuals, Terminal.Minus): [NonTerminal.Expr, AST_node.Nea, NonTerminal.Nonempty_Actuals_t],
-    (NonTerminal.Nonempty_Actuals, Terminal.If): [NonTerminal.Expr, AST_node.Nea, NonTerminal.Nonempty_Actuals_t],
-    (NonTerminal.Nonempty_Actuals, Terminal.Not): [NonTerminal.Expr, AST_node.Nea, NonTerminal.Nonempty_Actuals_t],
-    (NonTerminal.Nonempty_Actuals, TokenType.WORD): [NonTerminal.Expr, AST_node.Nea, NonTerminal.Nonempty_Actuals_t],
+    (NonTerminal.Actuals, TokenType.NUMBER): [NonTerminal.Nonempty_Actuals, SemanticAction.MakeActuals],
+    (NonTerminal.Actuals, TokenType.BOOLEAN): [NonTerminal.Nonempty_Actuals, SemanticAction.MakeActuals],
+    (NonTerminal.Actuals, Terminal.Minus): [NonTerminal.Nonempty_Actuals, SemanticAction.MakeActuals],
+    (NonTerminal.Actuals, Terminal.If): [NonTerminal.Nonempty_Actuals, SemanticAction.MakeActuals],
+    (NonTerminal.Actuals, Terminal.Not): [NonTerminal.Nonempty_Actuals, SemanticAction.MakeActuals],
+    (NonTerminal.Actuals, TokenType.WORD): [NonTerminal.Nonempty_Actuals, SemanticAction.MakeActuals],
+    (NonTerminal.Nonempty_Actuals, TokenType.NUMBER): [NonTerminal.Expr, SemanticAction.MakeNonEmptyActuals, NonTerminal.Nonempty_Actuals_t],
+    (NonTerminal.Nonempty_Actuals, TokenType.BOOLEAN): [NonTerminal.Expr, SemanticAction.MakeNonEmptyActuals, NonTerminal.Nonempty_Actuals_t],
+    (NonTerminal.Nonempty_Actuals, Terminal.Minus): [NonTerminal.Expr, SemanticAction.MakeNonEmptyActuals, NonTerminal.Nonempty_Actuals_t],
+    (NonTerminal.Nonempty_Actuals, Terminal.If): [NonTerminal.Expr, SemanticAction.MakeNonEmptyActuals, NonTerminal.Nonempty_Actuals_t],
+    (NonTerminal.Nonempty_Actuals, Terminal.Not): [NonTerminal.Expr, SemanticAction.MakeNonEmptyActuals, NonTerminal.Nonempty_Actuals_t],
+    (NonTerminal.Nonempty_Actuals, TokenType.WORD): [NonTerminal.Expr, SemanticAction.MakeNonEmptyActuals, NonTerminal.Nonempty_Actuals_t],
     (NonTerminal.Nonempty_Actuals_t, Terminal.CloseParen): [],
     (NonTerminal.Nonempty_Actuals_t, Terminal.Comma): [TokenType.DELIMETER, NonTerminal.Nonempty_Actuals],
-    (NonTerminal.Literal, TokenType.NUMBER): [TokenType.NUMBER, AST_node.NumberLiteral],
-    (NonTerminal.Literal, TokenType.BOOLEAN): [TokenType.BOOLEAN, AST_node.BooleanLiteral],
+    (NonTerminal.Literal, TokenType.NUMBER): [TokenType.NUMBER, SemanticAction.MakeNumberLiteral],
+    (NonTerminal.Literal, TokenType.BOOLEAN): [TokenType.BOOLEAN, SemanticAction.MakeBooleanLiteral],
     (NonTerminal.Print_Statement, Terminal.Print): [TokenType.KEYWORD, TokenType.DELIMETER, NonTerminal.Expr,
-                                                    TokenType.DELIMETER, AST_node.PrintStatement],
+                                                    TokenType.DELIMETER, SemanticAction.MakePrintStatement],
     (NonTerminal.Program, TokenType.EOF): [],
     (NonTerminal.Nonempty_Formals, Terminal.CloseParen): [NonTerminal.Formal, NonTerminal.Nonempty_Formals_t],
     (NonTerminal.Expr_p, Terminal.Or): [],
@@ -235,8 +289,8 @@ parse_table = {
     (NonTerminal.Factor_t, Terminal.CloseParen): [],
     (NonTerminal.Factor_t, Terminal.Comma): [],
     (NonTerminal.Factor_t, TokenType.EOF): [],
-    (NonTerminal.Actuals, Terminal.OpenParen): [NonTerminal.Nonempty_Actuals],
-    (NonTerminal.Nonempty_Actuals, Terminal.OpenParen): [NonTerminal.Expr, NonTerminal.Nonempty_Actuals_t],
+    (NonTerminal.Actuals, Terminal.OpenParen): [NonTerminal.Nonempty_Actuals, SemanticAction.MakeActuals],
+    (NonTerminal.Nonempty_Actuals, Terminal.OpenParen): [NonTerminal.Expr, SemanticAction.MakeNonEmptyActuals, NonTerminal.Nonempty_Actuals_t],
     (NonTerminal.Body, TokenType.EOF): []
 }
 # should there be a (NonTerminal.Program, TokenType.EOF) index?
