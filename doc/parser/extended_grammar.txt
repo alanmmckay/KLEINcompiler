@@ -1,0 +1,68 @@
+<PROGRAM> ::= <DEFINITIONS> {make-Definitions}
+
+<DEFINITIONS> ::= <DEF> <DEFINITIONS>
+	| e
+
+<DEF> ::= function <IDENTIFIER> {make-Identifier} ( <FORMALS> ) : <TYPE> <BODY> {make-Function}
+
+<FORMALS> ::= <NONEMPTYFORMALS> {make-Formals}
+	| e
+
+<NONEMPTYFORMALS> ::= <FORMAL> <NEEMPTYFORMALS-TAIL>
+
+<NEMPTYFORMALS-TAIL> ::= , <NONEMPTYFORMALS>
+	| e
+
+<FORMAL> ::= <IDENTIFIER> {make-identifier} : <TYPE> {make-Formal}
+
+<BODY> ::= <PRINT-STATEMENT> <BODY> {make-Body}
+	| <EXPR>
+
+<TYPE> ::= integer {make-Type}
+	| boolean {make-Type}
+
+<EXPR> ::= <SIMPLE-EXPR> <EXPR-TAIL>
+
+<EXPR-TAIL> ::= < <EXPR> {make-LessThan}
+	| = <EXPR> {make-EqualTo}
+	| e
+
+<SIMPLE-EXPR> ::= <Term> <SIMPLE-EXPRESSION-TAIL>
+
+<SIMPLE-EXPRESSION-TAIL> ::= or <SIMPLE-EXPR> {make-OrExpr}
+	| + <SIMPLE-EXPR> {make-PlusExpr}
+	| - <SIMPLE-EXPR> {make-MinusExpr}
+	| e
+
+<TERM> ::= <FACTOR> <TERM-TAIL>
+
+<TERM-TAIL> ::= and <TERM> {make-AndExpr}
+	| * <TERM> {make-TimesExpr}
+	| / <TERM> {make-DivideExpr}
+	| e
+
+<FACTOR> ::= if <EXPR> then <EXPR> else <EXPR> {make-IfStatement}
+	| not <FACTOR> {make-NotExpr}
+	| <IDENTIFIER> {make-Identifier} <FACTOR-TAIL>
+	| <LITERAL>
+	| - <FACTOR> {make-Negate}
+	| ( <EXPR> )
+
+<FACTOR-TAIL> ::= ( <ACTUALS> ) {make-FunctionCall}
+	| e
+
+<ACTUALS> ::= <NONEMPTYACTUALS> {make-Actuals}
+	| e
+
+<NONEMPTYACTUALS> ::= <EXPR> {make-Nea} <NONEMPTYACTUALS-TAIL>
+
+<NONEMPTYACTUALS-TAIL> ::= , <NONEMPTYACTUALS>
+	| e
+
+<LITERAL> ::= <NUMBER> {make-NumberLiteral}
+	| <BOOLEAN> {make-BooleanLiteral}
+
+<PRINT-STATEMENT> ::= print ( <EXPR> ) {make-PrintStatement}
+
+
+
