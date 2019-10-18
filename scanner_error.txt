@@ -1,0 +1,19 @@
+!--- SCANNER ERROR! ---!
+
+
+---> Input Program: 
+(* only aloud to put prints at the very top, body can be zero or more print statements followed by an expression *)
+
+function print_after() : integer
+    if 1 > 3 then
+    print (10)
+    else
+    20
+
+
+---> Error Information: 
+invalid character: > on line 4-> Input Program remaining to be scanned: 
+> 3 then
+    print (10)
+    else
+    20
