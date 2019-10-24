@@ -47,7 +47,7 @@ class Parser:
                     #putting information worth keeping onto the stack
                     #this information will be housed within the relevant nodes
                     #Does this factor boolean literals and types?
-                    if t.is_number() or t.is_word():
+                    if t.is_number() or t.is_word() or t.token_value == 'integer' or t.token_value == 'boolean':
                         push(t.value(), semantic_stack)
                         
                     #####################################
@@ -82,7 +82,7 @@ class Parser:
                 #decide which type of node needs to be made
                 objectClass = object_factory.get(A)
                 
-                print(objectClass)
+                print("objectClass: " + str(objectClass))
                 print(semantic_stack)
                 print()
                 
@@ -92,6 +92,7 @@ class Parser:
                 #put that node into the semantic stack
                 push(node, semantic_stack)
                 
+                print("Top: " + str(top(semantic_stack)))
                 #pop the semantic rule off the parse stack
                 pop(parse_stack)
                 
