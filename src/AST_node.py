@@ -21,29 +21,90 @@ def push(lst, stack):
     stack.append(lst)
 
 
-'''def buildNode(semantic_stack, nodeType):
-    
-    if issubclass(nodeType, ValueNode):
-        if nodeType == BinaryOperator:
-            #create node sending the value parameters based on the semantic stack
+#--- Possible functional node factory implementation ---#
+'''
+def nodeBuilder(semantic_stack, nodeType):
+    print(str(semantic_stack[-1]))
+    if nodeType == ExpressionNode:
+        expression = top(semantic_stack)
+        pop(semantic_stack)
+        return nodeType(expression)
+    elif issubclass(nodeType, ValueNode):
+        value = top(semantic_stack)
+        pop(semantic_stack)
+        if issubclass(nodeType, BinaryOperator):
+            leftHandSide = value
+            pop(semantic_stack)
+            rightHandSide = top(semantic_stack)
+            pop(semantic_stack)
+            return nodeType(leftHandSide, rightHandSide)
         else:
-            #create node sending a single value as a parameter based on the semantic stack
-    if nodeType == IfNode:#three values
-        #create node sending the three parameters based on the semantic stack
-    if nodeType == PrintStatementNode:#at least one value[?]
-        #create node sending a list of parameters[?] from the semantic stack
-    if nodeType == ActualsNode:#at least one value
-        #create node sending a list of actuals
-    if nodeType == FunctionCallNode:#two values
-        #create node sending an identifier node and an actuals node
-    if nodeType == BodyNode:
-        #create a node that is either a print statement or a set of expressions
-    if nodeType == FormalsNode:#two values
-        #create node sending a set of tuples which define a identifier : type pair
-    if nodeType == FunctionNode:
-        #create node sneding a formals node and an identifier node
-    if nodeType == DefinitionsNode
-        #create node sending...'''
+            return nodeType(value)
+    elif nodeType == PrintStatementNode:
+        expressions = []
+        while isinstance(top(semantic_stack), ExpressionNode):
+            push(top(semantic_stack), expressions)
+            pop(semantic_stack)
+        return nodeType(expressions)
+    elif nodeType == IfNode:
+        elseStatement = top(semantic_stack)
+        pop(semantic_stack)
+        thenStatement = top(semantic_stack)
+        pop(semantic_stack)
+        ifCondition = top(semantic_stack)
+        pop(semantic_stack)
+        return nodeType(ifCondition,thenStatement,elseStatement)
+    elif nodeType == ActualsNode:
+        actuals = []
+        while isinstance(top(semantic_stack), ExpressionNode):
+            push(top(semantic_stack), actuals)
+            pop(semantic_stack)
+        return nodeType(actuals)
+    elif nodeType == FunctionCallNode:
+        actualsNode = top(semantic_stack)
+        pop(semantic_stack)
+        functionName = top(semantic_stack)
+        pop(semantic_stack)
+        return nodeType(funtionName, actualsNode)
+    elif nodeType == FormalsNode:#getting parameter and argument switched up here...?
+        parameters = []
+        while True:
+            if isinstance(top(semantic_stack), TypeNode):
+                parameterType = top(semantic_stack)
+                pop(semantic_stack)
+                identifier = top(semantic_stack)
+                push((identifier, parameterType), parameters)
+            else:
+                break
+        return nodeType(parameters)
+    elif nodeType == FunctionNode:
+        body = top(semantic_stack)
+        pop(semantic_stack)
+        returnType = top(semantic_stack)
+        pop(semantic_stack)
+        parameters = top(semantic_stack)
+        pop(semantic_stack)
+        name = top(semantic_stack)
+        pop(semantic_stack)
+        return nodeType(name, parameters, returnType, body)
+    elif nodeType == BodyNode:
+        expressions = []
+        while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack), PrintStatementNode):
+           push(top(semantic_stack), expressions)
+           pop(semantic_stack)
+        return nodeType(expressions)
+    elif nodeType == DefinitionsNode:
+        functions = []
+        while True:
+            if len(semantic_stack) > 0 and isinstance(top(semantic_stack), FunctionNode):
+                push(top(semantic_stack), functions)
+                pop(semantic_stack)
+            else:
+                break
+        return functions
+    else:
+        print('need to throw an error here')
+'''
 
 class ASTnode(object):
     pass
