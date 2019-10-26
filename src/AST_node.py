@@ -56,16 +56,19 @@ class Program(ASTnode):
 class DefinitionsNode(ASTnode):
     def __init__(self, semantic_stack):
         self.functions = []
-        print(len(semantic_stack))
         while True:
             if len(semantic_stack) > 0 and isinstance(top(semantic_stack), FunctionNode):
                 push(top(semantic_stack), self.functions)
+                #print(top(semantic_stack))
                 pop(semantic_stack)
             else:
                 break
             
     def __str__(self):
-        return str()
+        self.returnString = "Program: \n"
+        for function in reversed(self.functions):
+            self.returnString += str(function) + "\n"
+        return self.returnString
 
 
 class FunctionNode(ASTnode):
@@ -111,15 +114,17 @@ class FormalsNode(ASTnode):
 
 class BodyNode(ASTnode):
     def __init__(self, semantic_stack):
-        self.printStatement = top(semantic_stack)
-        pop(semantic_stack)
         self.expressions = []
         while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack), PrintStatementNode):
             push(top(semantic_stack), self.expressions)
             pop(semantic_stack)
 
     def __str__(self):
-        return str()
+        returnString = str()
+        for expression in self.expressions:
+            returnString += str(expression) + "\n"
+        returnString += "\n"
+        return returnString
 
 
 # ---  --- #
@@ -138,7 +143,7 @@ class ExpressionNode(ASTnode):
         pop(semantic_stack)
         
     def __str__(self):
-        return "Expression Node: " +str(self.expression)
+        return str(self.expression)
     
 # --- --- #
 
@@ -184,21 +189,27 @@ class PrintStatementNode(ASTnode):
             pop(semantic_stack)
 
     def __str__(self):
-        return str()
+        self.returnString = "print("
+        for expression in self.expressions:
+            self.returnString += str(expression)
+        self.returnString += ")"
+        return self.returnString
  
 # -- # An if statement consists of various expressions --- #
 class IfNode(ASTnode):
     def __init__(self, semantic_stack):
-        self.Condition = top(semantic_stack)
+        self.expr2 = top(semantic_stack)
         pop(semantic_stack)
         self.expr1 = top(semantic_stack)
         pop(semantic_stack)
-        self.expr2 = top(semantic_stack)
+        self.condition = top(semantic_stack)
         pop(semantic_stack)
 
     def __str__(self):
-        return str()
-    
+        self.returnString = "if " + str(self.condition) + "\n"
+        self.returnString += "then " + str(self.expr1) + "\n"
+        self.returnString += "else " + str(self.expr2) + "\n"
+        return self.returnString
   
 # --- Expressions have values... --- #
 
@@ -248,18 +259,18 @@ class UnaryOperator(Operator):
         self.operatorType = "UnaryOperator"
 
     def __str__(self):
-        return self.operatorType + " " + str(self.value) +" \n"
+        return self.operatorType + " " + str(self.value) + " "
 
 # -- # Unary Operators:
 class NotNode(UnaryOperator):
     def __init__(self, semantic_stack):
-        UnaryOperator(self, semantic_stack)
+        UnaryOperator.__init__(self, semantic_stack)
         self.operatorType = "not"
 
 
-class NegationNode(ASTnode):
+class NegationNode(UnaryOperator):
     def __init__(self, semantic_stack):
-        UnaryOperator(self, semantic_stack)
+        UnaryOperator.__init__(self, semantic_stack)
         self.operatorType = "negate"
     
 
@@ -273,7 +284,7 @@ class BinaryOperator(UnaryOperator):
         pop(semantic_stack)
 
     def __str__(self):
-        return str(self.value1) + " " + self.operatorType + " " + str(self.value) + " \n"
+        return str(self.value1) + " " + self.operatorType + " " + str(self.value) + " "
 
 # -- # Binary Operators: 
 class LessThanNode(BinaryOperator):
@@ -323,13 +334,3 @@ class DivisionNode(BinaryOperator):
         BinaryOperator.__init__(self, semantic_stack)
         self.operatorType = "/"
 
-
-
-
-'''class NonEmptyActualsNode(ASTnode):
-    def __init__(self, semantic_stack):
-        #this merely exists?
-        pass
-
-    def __str__(self):
-        pass'''
