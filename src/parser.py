@@ -20,11 +20,11 @@ def push_rule(lst, stack):
 def push(lst, stack):
     stack.append(lst)
 
-
 class Parser:
     def __init__(self, scanner):
         self.scanner = scanner
-        self.debug_stack_string = ""
+        self.debug_stack_string = str()
+        self.debug_semantic_string = str()
 
     def parse(self):
         parse_stack = []
@@ -47,7 +47,7 @@ class Parser:
                     #putting information worth keeping onto the stack
                     #this information will be housed within the relevant nodes
                     #Does this factor boolean literals and types?
-                    if t.is_number() or t.is_word():
+                    if t.is_number() or t.is_word() or t.token_value == 'integer' or t.token_value == 'boolean':
                         push(t.value(), semantic_stack)
                         
                     #####################################
@@ -82,10 +82,6 @@ class Parser:
                 #decide which type of node needs to be made
                 objectClass = object_factory.get(A)
                 
-                print(objectClass)
-                print(semantic_stack)
-                print()
-                
                 #create a node using that class
                 node = objectClass(semantic_stack)
                 
@@ -95,9 +91,7 @@ class Parser:
                 #pop the semantic rule off the parse stack
                 pop(parse_stack)
                 
-
-                # need some sort of action in here, talks about it in session
-                # 14 class notes
+                self.debug_semantic_string += "---New Node: \n" + str(node) + "\n\n"
                 
             ###############################################
 
@@ -105,6 +99,9 @@ class Parser:
                 msg = 'invalid item on parse_stack: {}'
                 msg = msg.format(A)
                 raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
+            self.debug_stack_string += "semantic stack: \n"
+            for i in semantic_stack:
+             self.debug_stack_string += str(i) + "\n"
             self.debug_stack_string += "\n"
         if not t.is_eof():
             msg = 'unexpected token at end: {}'
@@ -116,11 +113,11 @@ class Parser:
         elif len(semantic_stack) != 1:
             #print("hello")
             msg = 'unexpected number of AST nodes: {}'
-            # raise ParseError()
+            raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
 
         else:
             # print statement here for a check
-            print(semantic_stack)
+            print(self.debug_semantic_string)
             return top(semantic_stack)
         
         ################################################
