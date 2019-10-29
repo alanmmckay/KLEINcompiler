@@ -22,9 +22,8 @@ def push(lst, stack):
 
 
 #--- Possible functional node factory implementation ---#
-'''
+
 def nodeBuilder(semantic_stack, nodeType):
-    print(str(semantic_stack[-1]))
     if nodeType == ExpressionNode:
         expression = top(semantic_stack)
         pop(semantic_stack)
@@ -34,7 +33,6 @@ def nodeBuilder(semantic_stack, nodeType):
         pop(semantic_stack)
         if issubclass(nodeType, BinaryOperator):
             leftHandSide = value
-            pop(semantic_stack)
             rightHandSide = top(semantic_stack)
             pop(semantic_stack)
             return nodeType(leftHandSide, rightHandSide)
@@ -46,7 +44,7 @@ def nodeBuilder(semantic_stack, nodeType):
             push(top(semantic_stack), expressions)
             pop(semantic_stack)
         return nodeType(expressions)
-    elif nodeType == IfNode:
+    elif nodeType == IfNode:#rename these vars...[?]
         elseStatement = top(semantic_stack)
         pop(semantic_stack)
         thenStatement = top(semantic_stack)
@@ -65,7 +63,7 @@ def nodeBuilder(semantic_stack, nodeType):
         pop(semantic_stack)
         functionName = top(semantic_stack)
         pop(semantic_stack)
-        return nodeType(funtionName, actualsNode)
+        return nodeType(functionName, actualsNode)
     elif nodeType == FormalsNode:#getting parameter and argument switched up here...?
         parameters = []
         while True:
@@ -73,6 +71,7 @@ def nodeBuilder(semantic_stack, nodeType):
                 parameterType = top(semantic_stack)
                 pop(semantic_stack)
                 identifier = top(semantic_stack)
+                pop(semantic_stack)
                 push((identifier, parameterType), parameters)
             else:
                 break
@@ -103,8 +102,8 @@ def nodeBuilder(semantic_stack, nodeType):
                 break
         return functions
     else:
-        print('need to throw an error here')
-'''
+        raise ValueError("halt!!")
+
 
 class ASTnode(object):
     pass
@@ -115,15 +114,8 @@ class Program(ASTnode):
 
 
 class DefinitionsNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.functions = []
-        while True:
-            if len(semantic_stack) > 0 and isinstance(top(semantic_stack), FunctionNode):
-                push(top(semantic_stack), self.functions)
-                #print(top(semantic_stack))
-                pop(semantic_stack)
-            else:
-                break
+    def __init__(self, functionsList):
+        self.functions = functionsList
             
     def __str__(self):
         self.returnString = "Program: \n"
@@ -133,32 +125,19 @@ class DefinitionsNode(ASTnode):
 
 
 class FunctionNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.functionBody = top(semantic_stack)
-        pop(semantic_stack)
-        self.functionType = top(semantic_stack)
-        pop(semantic_stack)
-        self.functionFormals = top(semantic_stack)
-        pop(semantic_stack)
-        self.functionName = top(semantic_stack)
-        pop(semantic_stack)
+    def __init__(self, name, parameters, returnType, body):
+        self.bodyNode = body
+        self.typeNode = returnType
+        self.formals = parameters
+        self.identifierNode = name
 
     def __str__(self):
-        return str(self.functionName) + " " + str(self.functionFormals) + " " + str(self.functionType) + " \n" + str(self.functionBody)
+        return "functionNode: " + str(self.identifierNode) + " " + str(self.formals) + " " + str(self.typeNode) + " \n" + str(self.bodyNode) + " end funciton node"
 
 
 class FormalsNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.formals = []
-        while True:
-            if isinstance(top(semantic_stack), TypeNode):
-                self.formalType = top(semantic_stack)
-                pop(semantic_stack)
-                self.identifier = top(semantic_stack)
-                pop(semantic_stack)
-                push((self.identifier, self.formalType), self.formals)
-            else:
-                break
+    def __init__(self, parameters):
+        self.formals = parameters
         
     def __iter__(self):
         pass
@@ -174,11 +153,8 @@ class FormalsNode(ASTnode):
 
 
 class BodyNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.expressions = []
-        while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack), PrintStatementNode):
-            push(top(semantic_stack), self.expressions)
-            pop(semantic_stack)
+    def __init__(self, expressions):
+        self.expressions = expressions
 
     def __str__(self):
         returnString = str()
@@ -190,30 +166,18 @@ class BodyNode(ASTnode):
 
 # ---  --- #
 
-'''class Expression(ASTnode):
-    def __init__(self):
-        pass
-    
-    def __str__(self):
-        return str()
-'''
-
 class ExpressionNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.expression = top(semantic_stack)
-        pop(semantic_stack)
+    def __init__(self, expression):
+        self.expression = expression
         
     def __str__(self):
-        return str(self.expression)
+        return "begin expression node: " + str(self.expression) + "end expression"
     
 # --- --- #
 
 class ActualsNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.actuals = []
-        while isinstance(top(semantic_stack), ExpressionNode):
-            push(top(semantic_stack), self.actuals)
-            pop(semantic_stack)
+    def __init__(self, actuals_list):
+        self.actuals = actuals_list
         
     def __str__(self):
         self.returnString = str()
@@ -226,14 +190,12 @@ class ActualsNode(ASTnode):
 
 # --- A FunctionCall needs to know an identifier name and the parameters --- #
 class FunctionCallNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.actualsNode = top(semantic_stack)
-        pop(semantic_stack)
-        self.functionName = top(semantic_stack)
-        pop(semantic_stack)
+    def __init__(self, functionName, arguments):
+        self.actualsNode = arguments
+        self.identifierNode = functionName
 
     def __str__(self):
-        self.returnString = str(self.functionName)
+        self.returnString = str(self.identifierNode)
         self.returnString += " ("
         self.returnString += str(self.actualsNode)
         self.returnString += ")"
@@ -243,11 +205,8 @@ class FunctionCallNode(ASTnode):
 # --- --- #
 
 class PrintStatementNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.expressions = []
-        while isinstance(top(semantic_stack), ExpressionNode):
-            push(top(semantic_stack), self.expressions)
-            pop(semantic_stack)
+    def __init__(self, expressions_list):
+        self.expressions = expressions_list
 
     def __str__(self):
         self.returnString = "print("
@@ -258,13 +217,10 @@ class PrintStatementNode(ASTnode):
  
 # -- # An if statement consists of various expressions --- #
 class IfNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.expr2 = top(semantic_stack)
-        pop(semantic_stack)
-        self.expr1 = top(semantic_stack)
-        pop(semantic_stack)
-        self.condition = top(semantic_stack)
-        pop(semantic_stack)
+    def __init__(self, ifExpression, thenExpression, elseExpression):
+        self.expr2 = elseExpression
+        self.expr1 = thenExpression
+        self.condition = ifExpression
 
     def __str__(self):
         self.returnString = "if " + str(self.condition) + "\n"
@@ -275,123 +231,127 @@ class IfNode(ASTnode):
 # --- Expressions have values... --- #
 
 class ValueNode(ASTnode):
-    def __init__(self, semantic_stack):
-        self.value = top(semantic_stack)
-        pop(semantic_stack)
+    def __init__(self, value):
+        self.value = value
         
     def __str__(self):
-        return str(self.value)
+        self.returnString = str(self.value)
+        return self.returnString
     
     
 class IdentifierNode(ValueNode):
-    def __init__(self, semantic_stack):
-        ValueNode.__init__(self, semantic_stack)
+    def __init__(self, name):
+        ValueNode.__init__(self, name)
 
 
 class NumberLiteralNode(ValueNode):
-    def __init__(self, semantic_stack):
-        ValueNode.__init__(self, semantic_stack)
+    def __init__(self, number):
+        ValueNode.__init__(self, number)
 
 
 class BooleanLiteralNode(ValueNode):
-    def __init__(self, semantic_stack):
-        ValueNode.__init__(self, semantic_stack)
+    def __init__(self, boolValue):
+        ValueNode.__init__(self, boolValue)
 
 
 
 class TypeNode(ValueNode):
-    def __init__(self, semantic_stack):
-        ValueNode.__init__(self, semantic_stack)
+    def __init__(self, typeValue):
+        ValueNode.__init__(self, typeValue)
         
 
 # --- Values can have an operation --- #
 
 class Operator(ValueNode):
-    def __init__(self, semantic_stack):
-        ValueNode.__init__(self, semantic_stack)
+    def __init__(self, operand):
+        ValueNode.__init__(self, operand)
         self.operatorType = str()
         
 
 # --- An operator can be a unary --- #
 
 class UnaryOperator(Operator):
-    def __init__(self, semantic_stack):
-        Operator.__init__(self, semantic_stack)
+    def __init__(self, operand):
+        Operator.__init__(self, operand)
         self.operatorType = "UnaryOperator"
 
     def __str__(self):
-        return self.operatorType + " " + str(self.value) + " "
+        self.returnString = " " + self.operatorType + " "
+        self.returnString += str(self.value) + " "
+        return self.returnString
 
 # -- # Unary Operators:
 class NotNode(UnaryOperator):
-    def __init__(self, semantic_stack):
-        UnaryOperator.__init__(self, semantic_stack)
+    def __init__(self, operand):
+        UnaryOperator.__init__(self, operand)
         self.operatorType = "not"
 
 
 class NegationNode(UnaryOperator):
-    def __init__(self, semantic_stack):
-        UnaryOperator.__init__(self, semantic_stack)
+    def __init__(self, operand):
+        UnaryOperator.__init__(self, operand)
         self.operatorType = "negate"
     
 
 # --- A Binary Operator has two values --- #
 
 class BinaryOperator(UnaryOperator):
-    def __init__(self, semantic_stack):
+    def __init__(self, leftOperand, rightOperand):
         self.operatorType = "BinaryOperator"
-        UnaryOperator.__init__(self, semantic_stack)
-        self.value1 = top(semantic_stack)
-        pop(semantic_stack)
+        UnaryOperator.__init__(self, rightOperand)
+        self.value1 = rightOperand
 
     def __str__(self):
-        return str(self.value1) + " " + self.operatorType + " " + str(self.value) + " "
+        self.returnString = str(self.value1) + " "
+        self.returnString += self.operatorType + " "
+        self.returnString += str(self.value) + " "
+        return self.returnString
 
 # -- # Binary Operators: 
 class LessThanNode(BinaryOperator):
-    def __init__(self, semantic_stack):
-        BinaryOperator.__init__(self, semantic_stack)
+    def __init__(self, leftOperand, rightOperand):
+        BinaryOperator.__init__(self, leftOperand, rightOperand)
         self.operatorType = "<"
 
 
 class EqualToNode(BinaryOperator):
-    def __init__(self, semantic_stack):
-        BinaryOperator.__init__(self, semantic_stack)
+    def __init__(self, leftOperand, rightOperand):
+        BinaryOperator.__init__(self, leftOperand, rightOperand)
         self.operatorType = "="
 
 
 class OrNode(BinaryOperator):
-    def __init__(self, semantic_stack):
-        BinaryOperator.__init__(self, semantic_stack)
+    def __init__(self, leftOperand, rightOperand):
+        BinaryOperator.__init__(self, leftOperand, rightOperand)
         self.operatorType = "or"
 
 
 class PlusNode(BinaryOperator):
-    def __init__(self, semantic_stack):
-        BinaryOperator.__init__(self, semantic_stack)
+    def __init__(self, leftOperand, rightOperand):
+        BinaryOperator.__init__(self, leftOperand, rightOperand)
         self.operatorType = "+"
 
 
 class MinusNode(BinaryOperator):
-    def __init__(self, semantic_stack):
-        BinaryOperator.__init__(self, semantic_stack)
+    def __init__(self, leftOperand, rightOperand):
+        BinaryOperator.__init__(self, leftOperand, rightOperand)
         self.operatorType = "-"
 
 
 class AndNode(BinaryOperator):
-    def __init__(self, semantic_stack):
-        BinaryOperator.__init__(self, semantic_stack)
+    def __init__(self, leftOperand, rightOperand):
+        BinaryOperator.__init__(self, leftOperand, rightOperand)
         self.operatorType = "and"
 
 
 class MultiplyNode(BinaryOperator):
-    def __init__(self, semantic_stack):
-        BinaryOperator.__init__(self, semantic_stack)
+    def __init__(self, leftOperand, rightOperand):
+        BinaryOperator.__init__(self, leftOperand, rightOperand)
         self.operatorType = "*"
 
 
 class DivisionNode(BinaryOperator):
-    def __init__(self, semantic_stack):
-        BinaryOperator.__init__(self, semantic_stack)
+    def __init__(self, leftOperand, rightOperand):
+        BinaryOperator.__init__(self, leftOperand, rightOperand)
         self.operatorType = "/"
 

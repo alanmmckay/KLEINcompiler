@@ -80,10 +80,10 @@ class Parser:
             
             elif isinstance(A, SemanticAction):
                 #decide which type of node needs to be made
-                objectClass = object_factory.get(A)
+                objectClass = class_factory.get(A)
                 
                 #create a node using that class
-                node = objectClass(semantic_stack)
+                node = nodeBuilder(semantic_stack,objectClass)
                 
                 #put that node into the semantic stack
                 push(node, semantic_stack)
@@ -111,7 +111,6 @@ class Parser:
         #################################################
         
         elif len(semantic_stack) != 1:
-            #print("hello")
             msg = 'unexpected number of AST nodes: {}'
             raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
 
