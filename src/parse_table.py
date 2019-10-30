@@ -127,7 +127,7 @@ class StaticTerminal():
             msg += "Token: {}\n".format(token)
             raise ValueError(msg)
         
-object_factory = {
+class_factory = {
     SemanticAction.MakeDefinitions: DefinitionsNode,
     SemanticAction.MakeIdentifier: IdentifierNode,
     SemanticAction.MakeFunction: FunctionNode,
