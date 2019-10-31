@@ -79,12 +79,14 @@ class Parser:
             ################################################
             
             elif isinstance(A, SemanticAction):
+                #print("-- New Semantic Action --")
+                
                 #decide which type of node needs to be made
                 objectClass = class_factory.get(A)
-                
+                #print(objectClass)
                 #create a node using that class
                 node = nodeBuilder(semantic_stack,objectClass)
-                
+                #print(node)
                 #put that node into the semantic stack
                 push(node, semantic_stack)
                 
@@ -100,8 +102,8 @@ class Parser:
                 msg = msg.format(A)
                 raise ParseError(msg, self.scanner.get_program_string(), self.debug_stack_string)
             self.debug_stack_string += "semantic stack: \n"
-            for i in semantic_stack:
-             self.debug_stack_string += str(i) + "\n"
+            '''for i in semantic_stack:
+             self.debug_stack_string += str(i) + "\n"'''
             self.debug_stack_string += "\n"
         if not t.is_eof():
             msg = 'unexpected token at end: {}'
@@ -116,7 +118,7 @@ class Parser:
 
         else:
             # print statement here for a check
-            print(self.debug_semantic_string)
+            #print(self.debug_semantic_string)
             return top(semantic_stack)
         
         ################################################

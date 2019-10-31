@@ -59,8 +59,12 @@ def nodeBuilder(semantic_stack, nodeType):
             pop(semantic_stack)
         return nodeType(actuals)
     elif nodeType == FunctionCallNode:
-        actualsNode = top(semantic_stack)
-        pop(semantic_stack)
+        if isinstance(top(semantic_stack), ActualsNode):
+            actualsNode = top(semantic_stack)
+            pop(semantic_stack)
+        else:
+            #create empty actualsNode
+            actualsNode = ActualsNode([])
         functionName = top(semantic_stack)
         pop(semantic_stack)
         return nodeType(functionName, actualsNode)
@@ -81,8 +85,12 @@ def nodeBuilder(semantic_stack, nodeType):
         pop(semantic_stack)
         returnType = top(semantic_stack)
         pop(semantic_stack)
-        parameters = top(semantic_stack)
-        pop(semantic_stack)
+        if(isinstance(top(semantic_stack),FormalsNode)):
+            parameters = top(semantic_stack)
+            pop(semantic_stack)
+        else:
+            #create empty formalsNode
+            parameters = FormalsNode([])
         name = top(semantic_stack)
         pop(semantic_stack)
         return nodeType(name, parameters, returnType, body)
@@ -100,7 +108,7 @@ def nodeBuilder(semantic_stack, nodeType):
                 pop(semantic_stack)
             else:
                 break
-        return functions
+        return nodeType(functions)
     else:
         raise ValueError("halt!!")
 
@@ -132,13 +140,16 @@ class FunctionNode(ASTnode):
         self.identifierNode = name
 
     def __str__(self):
-        return "functionNode: " + str(self.identifierNode) + " " + str(self.formals) + " " + str(self.typeNode) + " \n" + str(self.bodyNode) + " end funciton node"
+        return "function " + str(self.identifierNode) + " " + str(self.formals) + " " + str(self.typeNode) + " \n" + str(self.bodyNode) + " "
 
 
 class FormalsNode(ASTnode):
     def __init__(self, parameters):
-        self.formals = parameters
-        
+        self.formals = []
+        while(len(parameters) > 0):
+            push(top(parameters),self.formals)
+            pop(parameters)
+    
     def __iter__(self):
         pass
 
@@ -171,14 +182,17 @@ class ExpressionNode(ASTnode):
         self.expression = expression
         
     def __str__(self):
-        return "begin expression node: " + str(self.expression) + "end expression"
+        return " " + str(self.expression) + " "
     
 # --- --- #
 
 class ActualsNode(ASTnode):
     def __init__(self, actuals_list):
-        self.actuals = actuals_list
-        
+        self.actuals = []
+        while(len(actuals_list) > 0):
+            push(top(actuals_list),self.actuals)
+            pop(actuals_list)
+
     def __str__(self):
         self.returnString = str()
         for i in self.actuals:
@@ -298,7 +312,7 @@ class NegationNode(UnaryOperator):
 class BinaryOperator(UnaryOperator):
     def __init__(self, leftOperand, rightOperand):
         self.operatorType = "BinaryOperator"
-        UnaryOperator.__init__(self, rightOperand)
+        UnaryOperator.__init__(self, leftOperand)
         self.value1 = rightOperand
 
     def __str__(self):
