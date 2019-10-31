@@ -288,6 +288,7 @@ parse_table = {
     (NonTerminal.Factor_t, Terminal.Comma): [],
     (NonTerminal.Factor_t, TokenType.EOF): [],
     (NonTerminal.Actuals, Terminal.OpenParen): [NonTerminal.Nonempty_Actuals, SemanticAction.MakeActuals],
+    (NonTerminal.Actuals, Terminal.CloseParen): [],
     (NonTerminal.Nonempty_Actuals, Terminal.OpenParen): [NonTerminal.Expr, NonTerminal.Nonempty_Actuals_t],
     (NonTerminal.Body, TokenType.EOF): []
 }
