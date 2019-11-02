@@ -34,9 +34,7 @@ def nodeBuilder(semantic_stack, nodeType):
         if issubclass(nodeType, BinaryOperator):
             #right hand side is popped first...
             rightHandSide = value
-            print("right: "+str(rightHandSide))
             leftHandSide = top(semantic_stack)
-            print("left: "+str(leftHandSide))
             pop(semantic_stack)
             return nodeType(leftHandSide, rightHandSide)
         else:
@@ -118,18 +116,29 @@ def nodeBuilder(semantic_stack, nodeType):
 
 class ASTnode(object):
     def __init__(self):
-        #this information list will populate during construction
+        #this information list will populate during each node construction
         self.information = []
         
-        def parse_node(self,position=0):
-            if position < len(self.information):
-                evaluate = self.information[position]
-                if isinstance(evaluate, ASTnode):
-                    evaluate.parse_node(0)
-                else:
-                    if position < len(self.information):
-                        self.parse_node(position+1)
-                    return self.information[position]
+    def parse_node(self,position=0):
+        if position < len(self.information):#if position is in bounds of information
+            evaluate = self.information[position]#take a value to evaluate
+            
+            print()
+            
+            if isinstance(evaluate, ASTnode):#if it is a node
+                evaluate.parse_node(0)#parse through the node
+            
+            newEval = self.parse_node(position+1)#grab the next bit of information
+            #feed newEval into a function which checks relevant type information
+            
+            #just printing information here to track what's happening
+            if isinstance(evaluate, ASTnode):
+                print(type(evaluate))
+            else:
+                print(type(self.information[position]))#display the information
+                print(self.information[position])
+                
+            return self.information[position]
         
     
 class Program(ASTnode):
@@ -138,7 +147,10 @@ class Program(ASTnode):
 
 class DefinitionsNode(ASTnode):
     def __init__(self, functionsList):
+        ASTnode.__init__(self)
         self.functions = functionsList
+        self.information = self.functions
+        
             
     def __str__(self):
         self.returnString = "Program: \n"
@@ -149,10 +161,16 @@ class DefinitionsNode(ASTnode):
 
 class FunctionNode(ASTnode):
     def __init__(self, name, parameters, returnType, body):
+        ASTnode.__init__(self)
         self.bodyNode = body
         self.typeNode = returnType
         self.formals = parameters
         self.identifierNode = name
+        
+        push(self.bodyNode, self.information)
+        push(self.typeNode, self.information)
+        push(self.formals, self.information)
+        push(self.identifierNode, self.information)
 
     def __str__(self):
         return "function " + str(self.identifierNode) + " " + str(self.formals) + " " + str(self.typeNode) + " \n" + str(self.bodyNode) + " "
@@ -160,10 +178,12 @@ class FunctionNode(ASTnode):
 
 class FormalsNode(ASTnode):
     def __init__(self, parameters):
+        ASTnode.__init__(self)
         self.formals = []
         while(len(parameters) > 0):
-            push(top(parameters),self.formals)
-            pop(parameters)
+            push(top(parameters),self.formals)#this is adding a set of tuples: (identifierNode, typeNode)
+            pop(parameters)#perhaps change this!!
+        self.information = self.formals
     
     def __iter__(self):
         pass
@@ -180,7 +200,9 @@ class FormalsNode(ASTnode):
 
 class BodyNode(ASTnode):
     def __init__(self, expressions):
-        self.expressions = expressions
+        ASTnode.__init__(self)
+        self.expressions = expressions#list of expression and printstatement nodes
+        self.information = self.expressions
 
     def __str__(self):
         returnString = str()
@@ -194,7 +216,9 @@ class BodyNode(ASTnode):
 
 class ExpressionNode(ASTnode):
     def __init__(self, expression):
+        ASTnode.__init__(self)
         self.expression = expression
+        push(self.expression, self.information)
         
     def __str__(self):
         return " " + str(self.expression) + " "
@@ -203,10 +227,12 @@ class ExpressionNode(ASTnode):
 
 class ActualsNode(ASTnode):
     def __init__(self, actuals_list):
-        self.actuals = []
+        ASTnode.__init__(self)
+        self.actuals = []#list of expressions
         while(len(actuals_list) > 0):
             push(top(actuals_list),self.actuals)
             pop(actuals_list)
+        self.information = self.actuals
 
     def __str__(self):
         self.returnString = str()
@@ -220,8 +246,11 @@ class ActualsNode(ASTnode):
 # --- A FunctionCall needs to know an identifier name and the parameters --- #
 class FunctionCallNode(ASTnode):
     def __init__(self, functionName, arguments):
+        ASTnode.__init__(self)
         self.actualsNode = arguments
         self.identifierNode = functionName
+        push(self.actualsNode, self.information)
+        push(self.identifierNode, self.information)
 
     def __str__(self):
         self.returnString = str(self.identifierNode)
@@ -235,7 +264,9 @@ class FunctionCallNode(ASTnode):
 
 class PrintStatementNode(ASTnode):
     def __init__(self, expressions_list):
-        self.expressions = expressions_list
+        ASTnode.__init__(self)
+        self.expressions = expressions_list#list of expression nodes
+        self.information = self.expressions
 
     def __str__(self):
         self.returnString = "print("
@@ -247,9 +278,13 @@ class PrintStatementNode(ASTnode):
 # -- # An if statement consists of various expressions --- #
 class IfNode(ASTnode):
     def __init__(self, ifExpression, thenExpression, elseExpression):
+        ASTnode.__init__(self)
         self.expr2 = elseExpression
         self.expr1 = thenExpression
         self.condition = ifExpression
+        push(self.expr2, self.information)
+        push(self.expr1, self.information)
+        push(self.condition, self.information)
 
     def __str__(self):
         self.returnString = "if " + str(self.condition) + "\n"
@@ -263,6 +298,7 @@ class ValueNode(ASTnode):
     def __init__(self, value):
         ASTnode.__init__(self)
         self.value = value
+        push(self.value, self.information)
         
         
     def __str__(self):
@@ -328,12 +364,10 @@ class NegationNode(UnaryOperator):
 
 class BinaryOperator(UnaryOperator):
     def __init__(self, leftOperand, rightOperand):
-        print("right: "+str(leftOperand))
-        print("left: "+str(rightOperand))
-        print()
         self.operatorType = "BinaryOperator"
         UnaryOperator.__init__(self, rightOperand)
         self.value1 = leftOperand
+        push(self.value1, self.information)
 
     def __str__(self):
         self.returnString = str(self.value1) + " "
