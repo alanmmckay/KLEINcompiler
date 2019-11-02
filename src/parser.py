@@ -119,6 +119,7 @@ class Parser:
         else:
             # print statement here for a check
             #print(self.debug_semantic_string)
+            top(semantic_stack).parse_node()
             return top(semantic_stack)
         
         ################################################
