@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from src.errors import SemanticError
+#from src.errors import SemanticError
 
 
 def top(stack):
@@ -32,8 +32,11 @@ def nodeBuilder(semantic_stack, nodeType):
         value = top(semantic_stack)
         pop(semantic_stack)
         if issubclass(nodeType, BinaryOperator):
-            leftHandSide = value
-            rightHandSide = top(semantic_stack)
+            #right hand side is popped first...
+            rightHandSide = value
+            print("right: "+str(rightHandSide))
+            leftHandSide = top(semantic_stack)
+            print("left: "+str(leftHandSide))
             pop(semantic_stack)
             return nodeType(leftHandSide, rightHandSide)
         else:
@@ -114,9 +117,21 @@ def nodeBuilder(semantic_stack, nodeType):
 
 
 class ASTnode(object):
-    pass
-
-
+    def __init__(self):
+        #this information list will populate during construction
+        self.information = []
+        
+        def parse_node(self,position=0):
+            if position < len(self.information):
+                evaluate = self.information[position]
+                if isinstance(evaluate, ASTnode):
+                    evaluate.parse_node(0)
+                else:
+                    if position < len(self.information):
+                        self.parse_node(position+1)
+                    return self.information[position]
+        
+    
 class Program(ASTnode):
     pass
 
@@ -246,7 +261,9 @@ class IfNode(ASTnode):
 
 class ValueNode(ASTnode):
     def __init__(self, value):
+        ASTnode.__init__(self)
         self.value = value
+        
         
     def __str__(self):
         self.returnString = str(self.value)
@@ -311,9 +328,12 @@ class NegationNode(UnaryOperator):
 
 class BinaryOperator(UnaryOperator):
     def __init__(self, leftOperand, rightOperand):
+        print("right: "+str(leftOperand))
+        print("left: "+str(rightOperand))
+        print()
         self.operatorType = "BinaryOperator"
-        UnaryOperator.__init__(self, leftOperand)
-        self.value1 = rightOperand
+        UnaryOperator.__init__(self, rightOperand)
+        self.value1 = leftOperand
 
     def __str__(self):
         self.returnString = str(self.value1) + " "
@@ -368,4 +388,5 @@ class DivisionNode(BinaryOperator):
     def __init__(self, leftOperand, rightOperand):
         BinaryOperator.__init__(self, leftOperand, rightOperand)
         self.operatorType = "/"
+
 
