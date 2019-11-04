@@ -36,7 +36,10 @@ class Parser:
             self.debug_stack_string += "Current Stack: " + str(parse_stack) + "\n"
             self.debug_stack_string += "Top of Stack: " + str(A) + "\n"
             if isinstance(A, TokenType):
+                print()
+                print(semantic_stack)
                 t = self.scanner.next_token()
+                print(str(t.token_value) + " " + str(t.token_type))
                 self.debug_stack_string += "Token Type: " + str(t.token_type) + "\n"
                 self.debug_stack_string += "Token Value: " + str(t.token_value) + "\n"
                 if A == t.token_type:
@@ -47,7 +50,7 @@ class Parser:
                     #putting information worth keeping onto the stack
                     #this information will be housed within the relevant nodes
                     #Does this factor boolean literals and types?
-                    if t.is_number() or t.is_word() or t.token_value == 'integer' or t.token_value == 'boolean':
+                    if t.is_number() or t.is_word() or t.token_value == 'integer' or t.token_value == 'boolean' or t.token_value == 'true' or t.token_value == 'false':
                         push(t.value(), semantic_stack)
                         
                     #####################################
