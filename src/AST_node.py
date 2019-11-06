@@ -3,7 +3,6 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 #from src.errors import SemanticError
 
-
 def top(stack):
     return stack[-1]
 
@@ -157,38 +156,28 @@ class ASTnode(object):
     def parse_node(self,position=0):
         if position < len(self.information):#if position is in bounds of information
             evaluate = self.information[position]#take a value to evaluate
-            
             print()
             
             if isinstance(evaluate, ASTnode):#if it is a node
-                
-                #getting function declaration information asap
                 if isinstance(evaluate, FunctionNode):
-                    #print(evaluate.get_name())
-                    functionName = evaluate.get_name()
-                    function_record.append(functionName)
-                    if functionName not in function_table:
-                        function_table[functionName] = evaluate
-                    else:
-                        print("duplicate funtion error!")
+                    function_record.append(evaluate.get_name())#this list is used to keep track of which function is currently being processed
                         
-                    
-                #if isinstance(evaluate, IdentifierNode):
-                    #evaluate.typeCheck()##all nodes shoudl have to type check at some point...
                 evaluate.parse_node(0)#parse through the node
             
             newEval = self.parse_node(position+1)#grab the next bit of information
             #feed newEval into a function which checks relevant type information
             
-            self.typeCheck()#start typeCheck at leaf
-            #print(self.outputType)
+            if isinstance(evaluate, ASTnode):
+                evaluate.typeCheck()#start typeCheck at leaf
+            
+            
             #just printing information here to track what's happening
             if isinstance(evaluate, ASTnode):
                 print(type(evaluate))
             else:
                 print(type(self.information[position]))
                 print(self.information[position])
-            
+                
             return self.information[position]
         
     def typeCheck(self):
@@ -204,9 +193,14 @@ class DefinitionsNode(ASTnode):
         ASTnode.__init__(self)
         self.functions = functionsList
         self.information = self.functions
+        
         #build function table right here...
-        
-        
+        for function in self.functions:
+            functionName = function.get_name()
+            if functionName not in function_table:
+                function_table[functionName] = function
+            else:
+                print("duplicate function error!")
             
     def __str__(self):
         self.returnString = "Program: \n"
@@ -222,6 +216,7 @@ class FunctionNode(ASTnode):
         self.typeNode = returnType
         self.formals = parameters
         self.identifierNode = FunctionIdentifierNode(name)
+        self.outputType = self.typeNode.get_value()
         
         push(self.bodyNode, self.information)
         push(self.typeNode, self.information)
@@ -285,6 +280,9 @@ class ExpressionNode(ASTnode):
     def __str__(self):
         return " " + str(self.expression) + " "
     
+    def typeCheck(self):
+        self.outputType = self.expression.outputType
+    
 # --- --- #
 
 class ActualsNode(ASTnode):
@@ -295,6 +293,8 @@ class ActualsNode(ASTnode):
             push(top(actuals_list),self.actuals)
             pop(actuals_list)
         self.information = self.actuals
+        #print('ACTUALS!!!')
+        #print(self.actuals)
 
     def __str__(self):
         self.returnString = str()
@@ -321,15 +321,12 @@ class FunctionCallNode(ASTnode):
         self.returnString += ")"
         return self.returnString
     
-    #def typeCheck(self):#A function call can occur before it's declaration...
-        #if self.identifierNode.get_value() not in function_record:
-            #put into function_table... loop through function table testing with function_record post type check to make sure there is no extra or missing info
-            #function return type is relevant here...
-            #need to know context of function call
-            #can always grab up all the function infor right off the bat...
+    def typeCheck(self):
+        if self.identifierNode.get_value() in function_table:
+            self.outputType = function_table[self.identifierNode.get_value()].outputType #introduce method
+            print('functioncall output')
+            print(self.outputType)
         
-        
-
 
 # --- --- #
 
@@ -364,7 +361,14 @@ class IfNode(ASTnode):
         return self.returnString
     
     def typeCheck(self):
-        pass
+        if self.condition.outputType == "boolean":
+            print("if pass")
+        else:
+            print("if fail")
+        if self.expr1.outputType == self.expr2.outputType:
+            self.outputType = self.expr1.outputType
+        else:
+            print("error")
   
 # --- Expressions have values... --- #
 
@@ -391,15 +395,11 @@ class IdentifierNode(ValueNode):
         current_function = function_record[-1]
         formals = function_table[current_function].get_formals()
         for formal in formals:
-            #print()
-            #print(self.value)
             if self.value == formal[0].get_value():#need a get value method for ValueNode
-                print('pass identcheck')
                 existBool = 1
                 self.outputType = formal[1].get_value()#need a get type method for TypeNode
-                #print(self.outputType)
         if existBool != 1:
-            print('fail identcheck')
+            print('error!')
         
     
 class FunctionIdentifierNode(IdentifierNode):
@@ -449,6 +449,7 @@ class UnaryOperator(Operator):
         self.returnString += str(self.value) + " "
         return self.returnString
 
+
 # -- # Unary Operators:
 class NotNode(UnaryOperator):
     def __init__(self, operand):
@@ -491,6 +492,7 @@ class BinaryOperator(UnaryOperator):
     def get_values(self):
         return (self.value1, self.value)
     
+    
 class BooleanConnective(BinaryOperator):
     def __init__(self, leftOperand, rightOperand):
         BinaryOperator.__init__(self, leftOperand, rightOperand)
@@ -500,6 +502,7 @@ class BooleanConnective(BinaryOperator):
     def typeCheck(self):
         if self.value.outputType != "boolean" or self.value1.outputType != "boolean":
             print("error!")
+        
         
 class BooleanComparison(BinaryOperator):
     def __init__(self, leftOperand, rightOperand):
@@ -523,55 +526,56 @@ class ArithmeticOperation(BinaryOperator):
 
 
 # -- # Binary Operators: 
-class LessThanNode(BinaryOperator):
+class LessThanNode(BooleanComparison):
     def __init__(self, leftOperand, rightOperand):
         BooleanComparison.__init__(self, leftOperand, rightOperand)
         self.operatorType = "<"
         self.outputType = "boolean"
 
 
-class EqualToNode(BinaryOperator):
+class EqualToNode(BooleanComparison):
     def __init__(self, leftOperand, rightOperand):
         BooleanComparison.__init__(self, leftOperand, rightOperand)
         self.operatorType = "="
         self.outputType = "boolean"
 
 
-class OrNode(BinaryOperator):
+class OrNode(BooleanConnective):
     def __init__(self, leftOperand, rightOperand):
         BooleanConnective.__init__(self, leftOperand, rightOperand)
         self.operatorType = "or"
         self.outputType = "boolean"
 
-class PlusNode(BinaryOperator):
+
+class PlusNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "+"
         self.outputType = "integer"
 
 
-class MinusNode(BinaryOperator):
+class MinusNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "-"
         self.outputType = "integer"
 
 
-class AndNode(BinaryOperator):
+class AndNode(BooleanConnective):
     def __init__(self, leftOperand, rightOperand):
         BooleanConnective.__init__(self, leftOperand, rightOperand)
         self.operatorType = "and"
         self.outputType = "boolean"
 
 
-class MultiplyNode(BinaryOperator):
+class MultiplyNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "*"
         self.outputType = "integer"
 
 
-class DivisionNode(BinaryOperator):
+class DivisionNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "/"
