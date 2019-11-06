@@ -36,10 +36,10 @@ class Parser:
             self.debug_stack_string += "Current Stack: " + str(parse_stack) + "\n"
             self.debug_stack_string += "Top of Stack: " + str(A) + "\n"
             if isinstance(A, TokenType):
-                print()
-                print(semantic_stack)
+                #print()
+                #print(semantic_stack)
                 t = self.scanner.next_token()
-                print(str(t.token_value) + " " + str(t.token_type))
+                #print(str(t.token_value) + " " + str(t.token_type))
                 self.debug_stack_string += "Token Type: " + str(t.token_type) + "\n"
                 self.debug_stack_string += "Token Value: " + str(t.token_value) + "\n"
                 if A == t.token_type:
