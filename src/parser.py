@@ -36,7 +36,7 @@ class Parser:
             self.debug_stack_string += "Current Stack: " + str(parse_stack) + "\n"
             self.debug_stack_string += "Top of Stack: " + str(A) + "\n"
             if isinstance(A, TokenType):
-                #print()
+                print()
                 #print(semantic_stack)
                 t = self.scanner.next_token()
                 #print(str(t.token_value) + " " + str(t.token_type))
@@ -82,20 +82,24 @@ class Parser:
             ################################################
             
             elif isinstance(A, SemanticAction):
-                #print("-- New Semantic Action --")
+                '''print("-- New Semantic Action --")
+                print(parse_stack)
+                print()
+                print(semantic_stack)
+                print()'''
                 
                 #decide which type of node needs to be made
                 objectClass = class_factory.get(A)
-                #print(objectClass)
+                print(objectClass)
                 #create a node using that class
                 node = nodeBuilder(semantic_stack,objectClass)
-                #print(node)
+                print(node)
                 #put that node into the semantic stack
                 push(node, semantic_stack)
                 
                 #pop the semantic rule off the parse stack
                 pop(parse_stack)
-                
+                print()
                 self.debug_semantic_string += "---New Node: \n" + str(node) + "\n\n"
                 
             ###############################################
@@ -122,7 +126,8 @@ class Parser:
         else:
             # print statement here for a check
             #print(self.debug_semantic_string)
-            top(semantic_stack).parse_node()
+            #print(semantic_stack)
+            top(semantic_stack).process_node()
             return top(semantic_stack)
         
         ################################################

@@ -82,5 +82,11 @@ class ParseError(Error):
 #end class ParseError
 
 # errors thrown by the type checker
-class SemanticError(ValueError):
-    pass
+class SemanticError(Error):
+    def __init__(self, msg, program = ""):
+        Error.__init__(self,program)
+        self.error_type = "PARSER"
+        self.file_name = "parser_error.txt"
+        self.error_message += msg
+        self.error_string = msg
+        self.output_error()

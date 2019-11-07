@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-#from src.errors import SemanticError
+from src.errors import SemanticError
 
 def top(stack):
     return stack[-1]
@@ -18,17 +18,6 @@ def push_rule(lst, stack):
 
 def push(lst, stack):
     stack.append(lst)
-
-class constant():
-    def __init__(self,value):
-        self.value = value
-        
-    def get_value(self):
-        return self.value
-    
-    def set_value(self, newValue):
-        self.value = newValue
-        
     
 function_record = []
 
@@ -128,7 +117,7 @@ def nodeBuilder(semantic_stack, nodeType):
     
     elif nodeType == BodyNode:
         expressions = []
-        while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack), PrintStatementNode):
+        while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack), PrintStatementNode) or isinstance(top(semantic_stack), BodyNode):
            push(top(semantic_stack), expressions)
            pop(semantic_stack)
         return nodeType(expressions)
@@ -153,23 +142,20 @@ class ASTnode(object):
         #outputType designates the type of values to expect from the result of the node
         self.outputType = str()
         
-    def parse_node(self,position=0):
+    def process_node(self,position=0):
         if position < len(self.information):#if position is in bounds of information
             evaluate = self.information[position]#take a value to evaluate
             print()
-            
             if isinstance(evaluate, ASTnode):#if it is a node
                 if isinstance(evaluate, FunctionNode):
                     function_record.append(evaluate.get_name())#this list is used to keep track of which function is currently being processed
                         
-                evaluate.parse_node(0)#parse through the node
-            
-            newEval = self.parse_node(position+1)#grab the next bit of information
-            #feed newEval into a function which checks relevant type information
+                evaluate.process_node(0)#parse through the node
+            newEval = self.process_node(position+1)#grab the next bit of information
+            #^ assignment is currently being unused
             
             if isinstance(evaluate, ASTnode):
-                evaluate.typeCheck()#start typeCheck at leaf
-            
+                evaluate.typeCheck()#recursive descent will force typecheck to start at leaf
             
             #just printing information here to track what's happening
             if isinstance(evaluate, ASTnode):
@@ -177,14 +163,18 @@ class ASTnode(object):
             else:
                 print(type(self.information[position]))
                 print(self.information[position])
-                
             return self.information[position]
         
     def typeCheck(self):
         pass
+    
+    def get_outputType(self):
+        return self.outputType
         
     
 class Program(ASTnode):
+    #consideration: put all class definitions WITHIN this node.
+    #use this node to store the function table and function record
     pass
 
 
@@ -194,14 +184,16 @@ class DefinitionsNode(ASTnode):
         self.functions = functionsList
         self.information = self.functions
         
-        #build function table right here...
+        #build function a function table to ensure function calls are valid
         for function in self.functions:
             functionName = function.get_name()
             if functionName not in function_table:
                 function_table[functionName] = function
             else:
-                print("duplicate function error!")
-            
+                msg = 'Duplicate Function: {}'
+                msg = msg.format(functionName)
+                raise SemanticError(msg, " ")
+    
     def __str__(self):
         self.returnString = "Program: \n"
         for function in reversed(self.functions):
@@ -216,7 +208,7 @@ class FunctionNode(ASTnode):
         self.typeNode = returnType
         self.formals = parameters
         self.identifierNode = FunctionIdentifierNode(name)
-        self.outputType = self.typeNode.get_value()
+        self.outputType = self.typeNode.get_outputType()
         
         push(self.bodyNode, self.information)
         push(self.typeNode, self.information)
@@ -231,6 +223,13 @@ class FunctionNode(ASTnode):
 
     def __str__(self):
         return "function " + str(self.identifierNode) + " " + str(self.formals) + " " + str(self.typeNode) + " \n" + str(self.bodyNode) + " "
+    
+    def typeCheck(self):
+        print(self.bodyNode.outputType)
+        if self.outputType != self.bodyNode.get_outputType():
+            msg = "Failed typecheck on FunctionNode: {}\n"
+            msg.format(name)
+            raise SemanticError(msg)
 
 
 class FormalsNode(ASTnode):
@@ -255,7 +254,9 @@ class FormalsNode(ASTnode):
 class BodyNode(ASTnode):
     def __init__(self, expressions):
         ASTnode.__init__(self)
-        self.expressions = expressions#list of expression and printstatement nodes
+        #v list that is a combination of ExpressionNodes,
+        #PrintStatementNodes, and BodyNodes
+        self.expressions = expressions
         self.information = self.expressions
 
     def __str__(self):
@@ -264,6 +265,21 @@ class BodyNode(ASTnode):
             returnString += str(expression) + "\n"
         returnString += "\n"
         return returnString
+    
+    def typeCheck(self):
+        self.outputType = str()
+        expressionSwitch = 0
+        for node in self.expressions:
+            if isinstance(node,ExpressionNode) or isinstance(node,BodyNode):
+                if expressionSwitch == 0:
+                    self.outputType = node.outputType #introduce method
+                    expressionSwitch = 1
+                elif expressionSwitch == 1:
+                    if node.get_outputType() != self.outputType:
+                        msg = "Failed typecheck on BodyNode"
+                        msg.format()
+                        raise SemanticError(msg)
+                
 
 
 # ---  --- #
@@ -273,15 +289,12 @@ class ExpressionNode(ASTnode):
         ASTnode.__init__(self)
         self.expression = expression
         push(self.expression, self.information)
-        #print()
-        #print(expression)
-        #print(expression.outputType)
         
     def __str__(self):
         return " " + str(self.expression) + " "
     
     def typeCheck(self):
-        self.outputType = self.expression.outputType
+        self.outputType = self.expression.get_outputType()
     
 # --- --- #
 
