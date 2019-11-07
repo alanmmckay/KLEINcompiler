@@ -118,6 +118,7 @@ def nodeBuilder(semantic_stack, nodeType):
     elif nodeType == BodyNode:
         expressions = []
         while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack), PrintStatementNode) or isinstance(top(semantic_stack), BodyNode):
+        #while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack), PrintStatementNode): 
            push(top(semantic_stack), expressions)
            pop(semantic_stack)
         return nodeType(expressions)
@@ -272,7 +273,7 @@ class BodyNode(ASTnode):
         for node in self.expressions:
             if isinstance(node,ExpressionNode) or isinstance(node,BodyNode):
                 if expressionSwitch == 0:
-                    self.outputType = node.outputType #introduce method
+                    self.outputType = node.get_outputType() #introduce method
                     expressionSwitch = 1
                 elif expressionSwitch == 1:
                     if node.get_outputType() != self.outputType:
@@ -306,8 +307,6 @@ class ActualsNode(ASTnode):
             push(top(actuals_list),self.actuals)
             pop(actuals_list)
         self.information = self.actuals
-        #print('ACTUALS!!!')
-        #print(self.actuals)
 
     def __str__(self):
         self.returnString = str()
@@ -336,9 +335,11 @@ class FunctionCallNode(ASTnode):
     
     def typeCheck(self):
         if self.identifierNode.get_value() in function_table:
-            self.outputType = function_table[self.identifierNode.get_value()].outputType #introduce method
-            print('functioncall output')
-            print(self.outputType)
+            self.outputType = function_table[self.identifierNode.get_value()].get_outputType()
+        else:
+            msg = "Function call {} is undefined."
+            msg = msg.format(self.identifierNode.get_value())
+            raise SemanticError(msg)
         
 
 # --- --- #
@@ -374,14 +375,18 @@ class IfNode(ASTnode):
         return self.returnString
     
     def typeCheck(self):
-        if self.condition.outputType == "boolean":
-            print("if pass")
+        if self.condition.outputType == "boolean": #use outputType accessor here?
+            if self.expr1.outputType == self.expr2.outputType:
+                self.outputType = self.expr1.outputType
+            else:
+                msg = "If statement has inconsistent output type"
+                msg = msg.format()
+                raise SemanticError(msg)
         else:
-            print("if fail")
-        if self.expr1.outputType == self.expr2.outputType:
-            self.outputType = self.expr1.outputType
-        else:
-            print("error")
+            msg = "If statement requires a boolean condition."
+            msg = msg.format()
+            raise SemanticError(msg)
+       
   
 # --- Expressions have values... --- #
 
@@ -412,7 +417,9 @@ class IdentifierNode(ValueNode):
                 existBool = 1
                 self.outputType = formal[1].get_value()#need a get type method for TypeNode
         if existBool != 1:
-            print('error!')
+            msg = "Identifier {} has no declaration in function definition."
+            msg = msg.format(self.value)
+            raise SemanticError(msg)
         
     
 class FunctionIdentifierNode(IdentifierNode):
@@ -461,6 +468,12 @@ class UnaryOperator(Operator):
         self.returnString = " " + self.operatorType + " "
         self.returnString += str(self.value) + " "
         return self.returnString
+    
+    def build_error(self):
+        msg = "Semantic Error: "
+        msg += "{} expression expecting {}, received {}."
+        msg = msg.format(self.operatorType, self.outputType, self.value.outputType)
+        return msg
 
 
 # -- # Unary Operators:
@@ -472,8 +485,7 @@ class NotNode(UnaryOperator):
         
     def typeCheck(self):
         if self.value.outputType != "boolean":
-            print("error!")
-
+            raise SemanticError(self.build_error())
 
 class NegationNode(UnaryOperator):
     def __init__(self, operand):
@@ -483,7 +495,7 @@ class NegationNode(UnaryOperator):
         
     def typeCheck(self):
         if self.value.outputType != "integer":
-            print("error!")
+            raise SemanticError(self.build_error())
     
 
 # --- A Binary Operator has two values --- #
@@ -505,6 +517,12 @@ class BinaryOperator(UnaryOperator):
     def get_values(self):
         return (self.value1, self.value)
     
+    def build_error(self):
+        msg = "Semantic Error:"
+        msg += "{} expression expecting {}s, received {} and {}."
+        msg = msg.format(self.operatorType, self.outputType, self.value1.outputType, self.value.outputType)
+        return msg
+    
     
 class BooleanConnective(BinaryOperator):
     def __init__(self, leftOperand, rightOperand):
@@ -514,7 +532,7 @@ class BooleanConnective(BinaryOperator):
         
     def typeCheck(self):
         if self.value.outputType != "boolean" or self.value1.outputType != "boolean":
-            print("error!")
+            raise SemanticError(self.build_error())
         
         
 class BooleanComparison(BinaryOperator):
@@ -524,7 +542,7 @@ class BooleanComparison(BinaryOperator):
         
     def typeCheck(self):
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
-            print("error!")
+            raise SemanticError(self.build_error())
         
         
 class ArithmeticOperation(BinaryOperator):
@@ -535,7 +553,7 @@ class ArithmeticOperation(BinaryOperator):
         
     def typeCheck(self):#code duplication
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
-            print("error!")
+            raise SemanticError(self.build_error())
 
 
 # -- # Binary Operators: 

@@ -1,5 +1,5 @@
 import sys
-#sys.tracebacklimit=0
+sys.tracebacklimit=0
 
 class Error():
     def __init__(self, program):
