@@ -31,7 +31,7 @@ variable_table = {}
 #--- Possible functional node factory implementation ---#
 
 def nodeBuilder(semantic_stack, nodeType):
-    #print(semantic_stack)
+    
     
     if nodeType == ExpressionNode:
         expression = top(semantic_stack)
@@ -39,10 +39,7 @@ def nodeBuilder(semantic_stack, nodeType):
         return nodeType(expression)
     
     elif issubclass(nodeType, ValueNode):
-        #print("nodeType: "+str(nodeType))
         value = top(semantic_stack)
-        #print(value)
-        #print()
         pop(semantic_stack)
         if issubclass(nodeType, BinaryOperator):
             #right hand side is popped first...
@@ -135,6 +132,12 @@ def nodeBuilder(semantic_stack, nodeType):
     else:
         raise ValueError("halt!!")
 
+class errobj(object):
+    def __init__(self,msg):
+        self.msg = msg
+        
+    def get_message(self):
+        return self.msg
 
 class ASTnode(object):
     def __init__(self):
@@ -144,27 +147,52 @@ class ASTnode(object):
         self.outputType = str()
         
     def process_node(self,position=0):
+        #ad-hocery!---
+        if len(function_record) > 0 and isinstance(top(function_record),errobj):
+            return function_record
+        #---#
+        
         if position < len(self.information):#if position is in bounds of information
             evaluate = self.information[position]#take a value to evaluate
-            print()
+            
             if isinstance(evaluate, ASTnode):#if it is a node
                 if isinstance(evaluate, FunctionNode):
                     function_record.append(evaluate.get_name())#this list is used to keep track of which function is currently being processed
                         
-                evaluate.process_node(0)#parse through the node
-            newEval = self.process_node(position+1)#grab the next bit of information
+                nextNode = evaluate.process_node(0)#parse through the node
+                
+                #ad-hocery!!!---
+                if len(function_record) > 0 and isinstance(top(function_record),errobj):
+                    return function_record
+                #---#
+                
+            nextInfo = self.process_node(position+1)#grab the next bit of information
             #^ assignment is currently being unused
             
             if isinstance(evaluate, ASTnode):
-                evaluate.typeCheck()#recursive descent will force typecheck to start at leaf
+                errorState = evaluate.typeCheck()#recursive descent will force typecheck to start at leaf
+                if errorState != None:
+                    push(errobj(errorState),function_record)
+                    
             
             #just printing information here to track what's happening
-            if isinstance(evaluate, ASTnode):
+            '''if isinstance(evaluate, ASTnode):
                 print(type(evaluate))
             else:
                 print(type(self.information[position]))
-                print(self.information[position])
+                print(self.information[position])'''
+                
+                
+            #ad-hocery! ---
+            if isinstance(top(function_record),errobj):
+                return function_record
+            #---#
+            
             return self.information[position]
+        #ad-hocery! ---
+        if isinstance(top(function_record),errobj):
+            return function_record
+        #---#
         
     def typeCheck(self):
         pass
@@ -173,10 +201,11 @@ class ASTnode(object):
         return self.outputType
         
     
-class Program(ASTnode):
+class ProgramNode(ASTnode):
     #consideration: put all class definitions WITHIN this node.
     #use this node to store the function table and function record
     pass
+    
 
 
 class DefinitionsNode(ASTnode):
@@ -193,7 +222,7 @@ class DefinitionsNode(ASTnode):
             else:
                 msg = 'Duplicate Function: {}'
                 msg = msg.format(functionName)
-                raise SemanticError(msg, " ")
+                return msg
     
     def __str__(self):
         self.returnString = "Program: \n"
@@ -226,11 +255,10 @@ class FunctionNode(ASTnode):
         return "function " + str(self.identifierNode) + " " + str(self.formals) + " " + str(self.typeNode) + " \n" + str(self.bodyNode) + " "
     
     def typeCheck(self):
-        print(self.bodyNode.outputType)
         if self.outputType != self.bodyNode.get_outputType():
             msg = "Failed typecheck on FunctionNode: {}\n"
-            msg.format(name)
-            raise SemanticError(msg)
+            msg = msg.format(self.identifierNode.get_value())
+            return msg
 
 
 class FormalsNode(ASTnode):
@@ -279,7 +307,7 @@ class BodyNode(ASTnode):
                     if node.get_outputType() != self.outputType:
                         msg = "Failed typecheck on BodyNode"
                         msg.format()
-                        raise SemanticError(msg)
+                        return msg
                 
 
 
@@ -339,7 +367,7 @@ class FunctionCallNode(ASTnode):
         else:
             msg = "Function call {} is undefined."
             msg = msg.format(self.identifierNode.get_value())
-            raise SemanticError(msg)
+            return msg
         
 
 # --- --- #
@@ -381,11 +409,11 @@ class IfNode(ASTnode):
             else:
                 msg = "If statement has inconsistent output type"
                 msg = msg.format()
-                raise SemanticError(msg)
+                return msg
         else:
             msg = "If statement requires a boolean condition."
             msg = msg.format()
-            raise SemanticError(msg)
+            return msg
        
   
 # --- Expressions have values... --- #
@@ -419,7 +447,7 @@ class IdentifierNode(ValueNode):
         if existBool != 1:
             msg = "Identifier {} has no declaration in function definition."
             msg = msg.format(self.value)
-            raise SemanticError(msg)
+            return msg
         
     
 class FunctionIdentifierNode(IdentifierNode):
@@ -470,8 +498,7 @@ class UnaryOperator(Operator):
         return self.returnString
     
     def build_error(self):
-        msg = "Semantic Error: "
-        msg += "{} expression expecting {}, received {}."
+        msg = "{} expression expecting {}, received {}."
         msg = msg.format(self.operatorType, self.outputType, self.value.outputType)
         return msg
 
@@ -485,7 +512,7 @@ class NotNode(UnaryOperator):
         
     def typeCheck(self):
         if self.value.outputType != "boolean":
-            raise SemanticError(self.build_error())
+            return self.build_error()
 
 class NegationNode(UnaryOperator):
     def __init__(self, operand):
@@ -495,7 +522,7 @@ class NegationNode(UnaryOperator):
         
     def typeCheck(self):
         if self.value.outputType != "integer":
-            raise SemanticError(self.build_error())
+            return self.build_error()
     
 
 # --- A Binary Operator has two values --- #
@@ -518,8 +545,7 @@ class BinaryOperator(UnaryOperator):
         return (self.value1, self.value)
     
     def build_error(self):
-        msg = "Semantic Error:"
-        msg += "{} expression expecting {}s, received {} and {}."
+        msg = "{} expression expecting {}s, received {} and {}."
         msg = msg.format(self.operatorType, self.outputType, self.value1.outputType, self.value.outputType)
         return msg
     
@@ -532,7 +558,7 @@ class BooleanConnective(BinaryOperator):
         
     def typeCheck(self):
         if self.value.outputType != "boolean" or self.value1.outputType != "boolean":
-            raise SemanticError(self.build_error())
+            return self.build_error()
         
         
 class BooleanComparison(BinaryOperator):
@@ -542,7 +568,7 @@ class BooleanComparison(BinaryOperator):
         
     def typeCheck(self):
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
-            raise SemanticError(self.build_error())
+            return self.build_error()
         
         
 class ArithmeticOperation(BinaryOperator):
@@ -553,7 +579,7 @@ class ArithmeticOperation(BinaryOperator):
         
     def typeCheck(self):#code duplication
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
-            raise SemanticError(self.build_error())
+            return self.build_error()
 
 
 # -- # Binary Operators: 

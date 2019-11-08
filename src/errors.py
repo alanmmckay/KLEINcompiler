@@ -1,5 +1,5 @@
 import sys
-sys.tracebacklimit=0
+#sys.tracebacklimit=0
 
 class Error():
     def __init__(self, program):
@@ -83,10 +83,13 @@ class ParseError(Error):
 
 # errors thrown by the type checker
 class SemanticError(Error):
-    def __init__(self, msg, program = ""):
+    def __init__(self, msg, program, trace):
         Error.__init__(self,program)
-        self.error_type = "PARSER"
-        self.file_name = "parser_error.txt"
+        self.error_type = "PARSER; SEMANTIC"
+        self.file_name = "semantic_error.txt"
         self.error_message += msg
         self.error_string = msg
+        self.error_string += "\n-> Semantic Stack Trace: \n"
+        self.error_string += trace
         self.output_error()
+        
