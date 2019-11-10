@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.errors import SemanticError
+import inspect
 
 def top(stack):
     return stack[-1]
@@ -20,19 +21,17 @@ def push(lst, stack):
     stack.append(lst)
     
 function_record = []
+#used to keep track of the function definition 
+#that is currently being processed
 
 symbol_table = {}
 
 function_table = {}
-
-variable_table = {}
     
 
 #--- Possible functional node factory implementation ---#
 
 def nodeBuilder(semantic_stack, nodeType):
-    
-    
     if nodeType == ExpressionNode:
         expression = top(semantic_stack)
         pop(semantic_stack)
@@ -115,7 +114,6 @@ def nodeBuilder(semantic_stack, nodeType):
     elif nodeType == BodyNode:
         expressions = []
         while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack), PrintStatementNode) or isinstance(top(semantic_stack), BodyNode):
-        #while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack), PrintStatementNode): 
            push(top(semantic_stack), expressions)
            pop(semantic_stack)
         return nodeType(expressions)
@@ -129,10 +127,14 @@ def nodeBuilder(semantic_stack, nodeType):
             else:
                 break
         return nodeType(functions)
+    elif nodeType == ProgramNode:
+        functionDefinitions = top(semantic_stack)
+        pop(semantic_stack)
+        return nodeType(functionDefinitions)
     else:
-        raise ValueError("halt!!")
+        raise ValueError("Invalid node type in nodeBuilder")
 
-class errobj(object):
+class ErrorNode(object):
     def __init__(self,msg):
         self.msg = msg
         
@@ -147,10 +149,10 @@ class ASTnode(object):
         self.outputType = str()
         
     def process_node(self,position=0):
-        #ad-hocery!---
-        if len(function_record) > 0 and isinstance(top(function_record),errobj):
+        #ad-hoc means to push the ErrorNode to the parser---
+        if len(function_record) > 0 and isinstance(top(function_record),ErrorNode):
             return function_record
-        #---#
+        #I'm unsure if this block is neccessary---#
         
         if position < len(self.information):#if position is in bounds of information
             evaluate = self.information[position]#take a value to evaluate
@@ -159,40 +161,36 @@ class ASTnode(object):
                 if isinstance(evaluate, FunctionNode):
                     function_record.append(evaluate.get_name())#this list is used to keep track of which function is currently being processed
                         
-                nextNode = evaluate.process_node(0)#parse through the node
+                nextNode = evaluate.process_node(0)#make way to the leaf of a branch
                 
-                #ad-hocery!!!---
-                if len(function_record) > 0 and isinstance(top(function_record),errobj):
+                #ad-hoc means to push the ErrorNode to the parser---
+                if len(function_record) > 0 and isinstance(top(function_record),ErrorNode):
                     return function_record
-                #---#
+                #this block is used. Keep it until a more elegant solution is found---#
                 
-            nextInfo = self.process_node(position+1)#grab the next bit of information
-            #^ assignment is currently being unused
+            #traverse each leaf of a respective branch
+            nextInfo = self.process_node(position+1)
             
             if isinstance(evaluate, ASTnode):
-                errorState = evaluate.typeCheck()#recursive descent will force typecheck to start at leaf
+                #the aboverecursive descent will force typecheck to start at a leaf
+                errorState = evaluate.typeCheck()
                 if errorState != None:
-                    push(errobj(errorState),function_record)
+                    push(ErrorNode(errorState),function_record)
                     
-            
-            #just printing information here to track what's happening
-            '''if isinstance(evaluate, ASTnode):
-                print(type(evaluate))
-            else:
-                print(type(self.information[position]))
-                print(self.information[position])'''
-                
-                
             #ad-hocery! ---
-            if isinstance(top(function_record),errobj):
+            if isinstance(top(function_record),ErrorNode):
                 return function_record
-            #---#
+            #this block is used, simillar to previous block---#
+            
+            #More ad-hoc implementation. This problem could be solved with the
+            #implementation of a program node
+            if isinstance(self, DefinitionsNode):
+                errorState = self.typeCheck()
+                if errorState != None:
+                    push(ErrorNode(errorState),function_record)
             
             return self.information[position]
-        #ad-hocery! ---
-        if isinstance(top(function_record),errobj):
-            return function_record
-        #---#
+        
         
     def typeCheck(self):
         pass
@@ -213,6 +211,7 @@ class DefinitionsNode(ASTnode):
         ASTnode.__init__(self)
         self.functions = functionsList
         self.information = self.functions
+        self.functionSwitch = None
         
         #build function a function table to ensure function calls are valid
         for function in self.functions:
@@ -220,15 +219,22 @@ class DefinitionsNode(ASTnode):
             if functionName not in function_table:
                 function_table[functionName] = function
             else:
-                msg = 'Duplicate Function: {}'
-                msg = msg.format(functionName)
-                return msg
+                self.functionSwitch = functionName
+                continue
     
     def __str__(self):
         self.returnString = "Program: \n"
         for function in reversed(self.functions):
             self.returnString += str(function) + "\n"
         return self.returnString
+    
+    def typeCheck(self):
+        print('yesdef')
+        print(self.functionSwitch)
+        if self.functionSwitch != None:
+            msg = 'Duplicate Function: {}'
+            msg = msg.format(self.functionSwitch)
+            return msg
 
 
 class FunctionNode(ASTnode):
