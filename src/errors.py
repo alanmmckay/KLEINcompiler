@@ -82,5 +82,14 @@ class ParseError(Error):
 #end class ParseError
 
 # errors thrown by the type checker
-class SemanticError(ValueError):
-    pass
+class SemanticError(Error):
+    def __init__(self, msg, program, trace):
+        Error.__init__(self,program)
+        self.error_type = "PARSER; SEMANTIC"
+        self.file_name = "semantic_error.txt"
+        self.error_message += msg
+        self.error_string = msg
+        self.error_string += "\n-> Semantic Stack Trace: \n"
+        self.error_string += trace
+        self.output_error()
+        
