@@ -2,24 +2,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.errors import SemanticError
-import inspect
+from src.stack_operations import top, pop, push, push_rule
 
-def top(stack):
-    return stack[-1]
-
-
-def pop(stack):
-    stack.pop()
-
-
-def push_rule(lst, stack):
-    for element in reversed(lst):
-        stack.append(element)
-
-
-def push(lst, stack):
-    stack.append(lst)
-    
 function_record = []
 #used to keep track of the function definition 
 #that is currently being processed
@@ -28,9 +12,6 @@ symbol_table = {}
 
 function_table = {}
     
-
-#--- Possible functional node factory implementation ---#
-
 def nodeBuilder(semantic_stack, nodeType):
     if nodeType == ExpressionNode:
         expression = top(semantic_stack)
