@@ -2,23 +2,9 @@ from src.scanner import Scanner
 from src.errors import ParseError
 from src.parse_table import *
 from src.k_token import Token, TokenType
-from src.AST_node import ASTnode
+from src.AST_node import *
+from src.stack_operations import *
 
-def top(stack):
-    return stack[-1]
-
-
-def pop(stack):
-    stack.pop()
-
-
-def push_rule(lst, stack):
-    for element in reversed(lst):
-        stack.append(element)
-
-
-def push(lst, stack):
-    stack.append(lst)
 
 class Parser:
     def __init__(self, scanner):

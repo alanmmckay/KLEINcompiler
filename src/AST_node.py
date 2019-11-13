@@ -3,25 +3,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.errors import SemanticError
-import inspect
-
-
-def top(stack):
-    return stack[-1]
-
-
-def pop(stack):
-    stack.pop()
-
-
-def push_rule(lst, stack):
-    for element in reversed(lst):
-        stack.append(element)
-
-
-def push(lst, stack):
-    stack.append(lst)
-
+from src.stack_operations import top, pop, push, push_rule
 
 function_record = []
 # used to keep track of the function definition
@@ -30,9 +12,6 @@ function_record = []
 symbol_table = {}
 
 function_table = {}
-
-
-# --- Possible functional node factory implementation ---#
 
 def nodeBuilder(semantic_stack, nodeType):
     if nodeType == ExpressionNode:
@@ -133,6 +112,7 @@ def nodeBuilder(semantic_stack, nodeType):
                 break
         return nodeType(functions)
     elif nodeType == ProgramNode:
+        #hand the DefinitionsNode to the ProgramNode
         functionDefinitions = top(semantic_stack)
         pop(semantic_stack)
         return nodeType(functionDefinitions)
@@ -188,15 +168,7 @@ class ASTnode(object):
             # ad-hocery! ---
             if isinstance(top(function_record), ErrorNode):
                 return function_record
-            # this block is used, simillar to previous block---#
-
-            # More ad-hoc implementation. This problem could be solved with the
-            # implementation of a program node
-            if isinstance(self, DefinitionsNode):
-                errorState = self.typeCheck()
-                if errorState != None:
-                    push(ErrorNode(errorState), function_record)
-
+            #this block is used, simillar to previous block---#
             return self.information[position]
 
     def typeCheck(self):
@@ -207,9 +179,23 @@ class ASTnode(object):
 
 
 class ProgramNode(ASTnode):
-    # consideration: put all class definitions WITHIN this node.
-    # use this node to store the function table and function record
-    pass
+    #consideration: put all class definitions WITHIN this node.
+    #use this node to store the function table and function record
+    def __init__(self, functionDefinitions):
+        ASTnode.__init__(self)
+        self.definitionsNode = functionDefinitions
+        push(self.definitionsNode,self.information)
+        #set up function_table here?
+        
+    
+    def __str__(self):
+        #Definitions.__str__() prints out the function list...
+        self.returnString = "Program: \n"
+        self.returnString += self.definitionsNode.__str__()
+        return self.returnString
+        
+    def typeCheck(self):
+        pass
 
 
 class DefinitionsNode(ASTnode):
@@ -229,14 +215,12 @@ class DefinitionsNode(ASTnode):
                 continue
 
     def __str__(self):
-        self.returnString = "Program: \n"
+        self.returnString = str()
         for function in reversed(self.functions):
             self.returnString += str(function) + "\n"
         return self.returnString
 
     def typeCheck(self):
-        print('yesdef')
-        print(self.functionSwitch)
         if self.functionSwitch != None:
             msg = 'Duplicate Function: {}'
             msg = msg.format(self.functionSwitch)
@@ -271,7 +255,7 @@ class FunctionNode(ASTnode):
         return self.identifierNode.__str__()
 
     def get_formals(self):
-        return self.formals.formals  # perhaps make a method here...
+        return self.formals.get_formals()
 
     def __str__(self):
         return "function " + str(self.identifierNode) + " " + str(self.formals) + " " + str(
@@ -310,6 +294,9 @@ class FormalsNode(ASTnode):
                 self.returnString += ", "
         self.returnString += ")"
         return self.returnString
+    
+    def get_formals(self):
+        return self.formals
 
 
 class BodyNode(ASTnode):
@@ -333,7 +320,7 @@ class BodyNode(ASTnode):
         for node in self.expressions:
             if isinstance(node, ExpressionNode) or isinstance(node, BodyNode):
                 if expressionSwitch == 0:
-                    self.outputType = node.get_outputType()  # introduce method
+                    self.outputType = node.get_outputType()
                     expressionSwitch = 1
                 elif expressionSwitch == 1:
                     if node.get_outputType() != self.outputType:
@@ -447,8 +434,7 @@ class PrintStatementNode(ASTnode):
         program = "Tm code here"
         return program
 
-
-# -- # An if statement consists of various expressions --- #
+      
 class IfNode(ASTnode):
     def __init__(self, ifExpression, thenExpression, elseExpression):
         ASTnode.__init__(self)
@@ -466,9 +452,9 @@ class IfNode(ASTnode):
         return self.returnString
 
     def typeCheck(self):
-        if self.condition.outputType == "boolean":  # use outputType accessor here?
-            if self.expr1.outputType == self.expr2.outputType:
-                self.outputType = self.expr1.outputType
+        if self.condition.get_outputType() == "boolean": #use outputType accessor here?
+            if self.expr1.get_outputType() == self.expr2.get_outputType():
+                self.outputType = self.expr1.get_outputType()
             else:
                 msg = "If statement has inconsistent output type"
                 msg = msg.format()
@@ -504,9 +490,10 @@ class IdentifierNode(ValueNode):
         current_function = function_record[-1]
         formals = function_table[current_function].get_formals()
         for formal in formals:
-            if self.value == formal[0].get_value():  # need a get value method for ValueNode
+            if self.value == formal[0].get_value():
                 existBool = 1
-                self.outputType = formal[1].get_value()  # need a get type method for TypeNode
+                self.outputType = formal[1].get_value()
+
         if existBool != 1:
             msg = "Identifier {} has no declaration in function definition."
             msg = msg.format(self.value)

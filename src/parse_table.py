@@ -77,8 +77,11 @@ class SemanticAction(Enum):
     MakePrintStatement = 22
     MakeOr = 23
     MakeExpression = 24
+    MakeProgram = 25
     
 
+#this was implemented because of some janky behavior occurring
+#whilst indexing into the parse table using the Terminal enumeration.
 class StaticTerminal():
     def __init__(self, token):
         self.value = token.token_value
@@ -132,7 +135,6 @@ class_factory = {
     SemanticAction.MakeIdentifier: IdentifierNode,
     SemanticAction.MakeFunction: FunctionNode,
     SemanticAction.MakeFormals: FormalsNode,
-    #SemanticAction.MakeFormal: FormalNode,
     SemanticAction.MakeBody: BodyNode,
     SemanticAction.MakeType: TypeNode,
     SemanticAction.MakeLessThan: LessThanNode,
@@ -147,17 +149,17 @@ class_factory = {
     SemanticAction.MakeNot: NotNode,
     SemanticAction.MakeFunctionCall: FunctionCallNode,
     SemanticAction.MakeActuals: ActualsNode,
-    #SemanticAction.MakeNonEmptyActuals: NonEmptyActualsNode,
     SemanticAction.MakeNumberLiteral: NumberLiteralNode,
     SemanticAction.MakeBooleanLiteral: BooleanLiteralNode,
     SemanticAction.MakePrintStatement: PrintStatementNode,
     SemanticAction.MakeOr: OrNode,
-    SemanticAction.MakeExpression : ExpressionNode
+    SemanticAction.MakeExpression : ExpressionNode,
+    SemanticAction.MakeProgram : ProgramNode
 }    
             
 
 parse_table = {
-    (NonTerminal.Program, Terminal.Function): [NonTerminal.Definitions, SemanticAction.MakeDefinitions],
+    (NonTerminal.Program, Terminal.Function): [NonTerminal.Definitions, SemanticAction.MakeDefinitions, SemanticAction.MakeProgram],
     (NonTerminal.Definitions, Terminal.Function): [NonTerminal.Def, NonTerminal.Definitions],
     (NonTerminal.Definitions, TokenType.EOF): [],
     (NonTerminal.Def, Terminal.Function): [TokenType.KEYWORD, TokenType.WORD, SemanticAction.MakeIdentifier, TokenType.DELIMETER, NonTerminal.Formals, TokenType.DELIMETER, TokenType.DELIMETER, NonTerminal.Type, NonTerminal.Body, SemanticAction.MakeFunction],
@@ -253,14 +255,10 @@ parse_table = {
     (NonTerminal.Expr_p, Terminal.Or): [],
     (NonTerminal.Expr_p, Terminal.Plus): [],
     (NonTerminal.Expr_p, Terminal.Minus): [],
-    # (NonTerminal.Expr_p, Terminal.And): [],
     (NonTerminal.Expr_p, TokenType.EOF): [],
     (NonTerminal.Simple_Expr_t, Terminal.And): [],
     (NonTerminal.Simple_Expr_t, Terminal.Mult): [],
     (NonTerminal.Simple_Expr_t, Terminal.Divide): [],
-    # (NonTerminal.Simple_Expr_t , Terminal.Or): [],
-    # (NonTerminal.Simple_Expr_t , Terminal.Plus): [],
-    # (NonTerminal.Simple_Expr_t , Terminal.Minus): [],
     (NonTerminal.Simple_Expr_t, Terminal.And): [],
     (NonTerminal.Simple_Expr_t, Terminal.Function): [],
     (NonTerminal.Simple_Expr_t, Terminal.Then): [],
