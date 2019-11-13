@@ -31,6 +31,7 @@ gen = Generator(ast)
 program = gen.generate()
 
 print()
+print("program being returned in code_gen_validate")
 print(program)
 print()
 

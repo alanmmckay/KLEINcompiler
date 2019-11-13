@@ -3,5 +3,6 @@ class Generator:
         self.ast = ast
 
     def generate(self):
-        program = self.ast.code_gen()
+        line = 0
+        program = self.ast.code_gen(line)
         return program

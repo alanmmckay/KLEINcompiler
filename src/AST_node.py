@@ -118,7 +118,7 @@ def nodeBuilder(semantic_stack, nodeType):
         expressions = []
         while isinstance(top(semantic_stack), ExpressionNode) or isinstance(top(semantic_stack),
                                                                             PrintStatementNode) or isinstance(
-                top(semantic_stack), BodyNode):
+            top(semantic_stack), BodyNode):
             push(top(semantic_stack), expressions)
             pop(semantic_stack)
         return nodeType(expressions)
@@ -242,9 +242,14 @@ class DefinitionsNode(ASTnode):
             msg = msg.format(self.functionSwitch)
             return msg
 
-    def code_gen(self):
+    def code_gen(self, line):
+        line += 1
+        print()
+        print("code gen in def node")
+        print("line num ", line)
+        print()
         for function in self.functions:
-            program = function.code_gen()
+            program = function.code_gen(line)
         return program
 
 
@@ -278,19 +283,22 @@ class FunctionNode(ASTnode):
             msg = msg.format(self.identifierNode.get_value())
             return msg
 
-    def code_gen(self):
+    def code_gen(self, line):
+        line += 1
         program = self.get_name()
+        print("code gen in function node")
+        print("line num ", line)
         print(program)
-        program = self.bodyNode.code_gen(program)
+        print()
+        program = self.bodyNode.code_gen(program, line)
         return program
-
 
 
 class FormalsNode(ASTnode):
     def __init__(self, parameters):
         ASTnode.__init__(self)
         self.formals = []
-        while (len(parameters) > 0):
+        while len(parameters) > 0:
             push(top(parameters), self.formals)  # this is adding a set of tuples: (identifierNode, typeNode)
             pop(parameters)  # perhaps change this!!
         self.information = self.formals
@@ -334,9 +342,14 @@ class BodyNode(ASTnode):
                         msg.format()
                         return msg
 
-    def code_gen(self, program):
+    def code_gen(self, program, line):
+        line += 1
+        print("code gen in Body node")
+        print("line num ", line)
+        print()
         for expression in self.expressions:
-            program = expression.code_gen()
+            program = expression.code_gen(line)
+            line += 1
         return program
 
 
@@ -354,10 +367,16 @@ class ExpressionNode(ASTnode):
     def typeCheck(self):
         self.outputType = self.expression.get_outputType()
 
-    def code_gen(self):
+    def code_gen(self, line):
+        line += 1
+        print("code gen in expression node")
+        print("line num ", line)
         print(self)
-        program = self.expression.code_gen()
-        return program
+        print()
+        program = self.expression.code_gen(line)
+        return program, line
+
+
 # --- --- #
 
 class ActualsNode(ASTnode):
@@ -418,11 +437,14 @@ class PrintStatementNode(ASTnode):
         self.returnString += ")"
         return self.returnString
 
-    def code_gen(self):
+    def code_gen(self, line):
+        line += 1
+        print("code gen in print statement node")
+        print("line num ", line)
         print(self)
-        program = self
+        print()
+        program = "hello"
         return program
-
 
 
 # -- # An if statement consists of various expressions --- #
@@ -503,10 +525,14 @@ class NumberLiteralNode(ValueNode):
         ValueNode.__init__(self, number)
         self.outputType = "integer"
 
-    def code_gen(self):
+    def code_gen(self, line):
+        line += 1
+        print("code gen inside number literal node")
+        print("line num ", line)
         print(self)
+        print()
         program = self
-        return program
+        return program, line
 
 
 class BooleanLiteralNode(ValueNode):
