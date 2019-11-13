@@ -128,6 +128,7 @@ def nodeBuilder(semantic_stack, nodeType):
                 break
         return nodeType(functions)
     elif nodeType == ProgramNode:
+        #hand the DefinitionsNode to the ProgramNode
         functionDefinitions = top(semantic_stack)
         pop(semantic_stack)
         return nodeType(functionDefinitions)
@@ -202,8 +203,21 @@ class ASTnode(object):
 class ProgramNode(ASTnode):
     #consideration: put all class definitions WITHIN this node.
     #use this node to store the function table and function record
-    pass
+    def __init__(self, functionDefinitions):
+        ASTnode.__init__(self)
+        self.definitionsNode = functionDefinitions
+        push(self.definitionsNode,self.information)
+        #set up function_table here?
+        
     
+    def __str__(self):
+        #Definitions.__str__() prints out the function list...
+        self.returnString = "Program: \n"
+        self.returnString += self.definitionsNode.__str__()
+        return self.returnString
+        
+    def typeCheck(self):
+        pass
 
 
 class DefinitionsNode(ASTnode):
@@ -223,14 +237,12 @@ class DefinitionsNode(ASTnode):
                 continue
     
     def __str__(self):
-        self.returnString = "Program: \n"
+        self.returnString = str()
         for function in reversed(self.functions):
             self.returnString += str(function) + "\n"
         return self.returnString
     
     def typeCheck(self):
-        print('yesdef')
-        print(self.functionSwitch)
         if self.functionSwitch != None:
             msg = 'Duplicate Function: {}'
             msg = msg.format(self.functionSwitch)

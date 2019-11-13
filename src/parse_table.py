@@ -77,6 +77,7 @@ class SemanticAction(Enum):
     MakePrintStatement = 22
     MakeOr = 23
     MakeExpression = 24
+    MakeProgram = 25
     
 
 class StaticTerminal():
@@ -152,12 +153,13 @@ class_factory = {
     SemanticAction.MakeBooleanLiteral: BooleanLiteralNode,
     SemanticAction.MakePrintStatement: PrintStatementNode,
     SemanticAction.MakeOr: OrNode,
-    SemanticAction.MakeExpression : ExpressionNode
+    SemanticAction.MakeExpression : ExpressionNode,
+    SemanticAction.MakeProgram : ProgramNode
 }    
             
 
 parse_table = {
-    (NonTerminal.Program, Terminal.Function): [NonTerminal.Definitions, SemanticAction.MakeDefinitions],
+    (NonTerminal.Program, Terminal.Function): [NonTerminal.Definitions, SemanticAction.MakeDefinitions, SemanticAction.MakeProgram],
     (NonTerminal.Definitions, Terminal.Function): [NonTerminal.Def, NonTerminal.Definitions],
     (NonTerminal.Definitions, TokenType.EOF): [],
     (NonTerminal.Def, Terminal.Function): [TokenType.KEYWORD, TokenType.WORD, SemanticAction.MakeIdentifier, TokenType.DELIMETER, NonTerminal.Formals, TokenType.DELIMETER, TokenType.DELIMETER, NonTerminal.Type, NonTerminal.Body, SemanticAction.MakeFunction],
