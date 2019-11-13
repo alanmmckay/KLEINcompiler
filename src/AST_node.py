@@ -197,6 +197,13 @@ class ProgramNode(ASTnode):
     def typeCheck(self):
         pass
 
+    def code_gen(self, line):
+        print("code gen in program node")
+        program = self.definitionsNode.code_gen(line)
+        print("code gen in program node return")
+        print()
+        return program
+
 
 class DefinitionsNode(ASTnode):
     def __init__(self, functionsList):
