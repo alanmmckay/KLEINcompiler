@@ -243,13 +243,13 @@ class DefinitionsNode(ASTnode):
             return msg
 
     def code_gen(self, line):
-        line += 1
         print()
         print("code gen in def node")
-        print("line num ", line)
         print()
         for function in self.functions:
             program = function.code_gen(line)
+        print("code gen in def node return")
+        print()
         return program
 
 
@@ -284,13 +284,12 @@ class FunctionNode(ASTnode):
             return msg
 
     def code_gen(self, line):
-        line += 1
         program = self.get_name()
         print("code gen in function node")
-        print("line num ", line)
-        print(program)
         print()
         program = self.bodyNode.code_gen(program, line)
+        print("code gen in function node return")
+        print()
         return program
 
 
@@ -343,13 +342,15 @@ class BodyNode(ASTnode):
                         return msg
 
     def code_gen(self, program, line):
-        line += 1
         print("code gen in Body node")
-        print("line num ", line)
         print()
         for expression in self.expressions:
-            program = expression.code_gen(line)
+            program = expression.code_gen(program, line)
             line += 1
+            print("code gen in Body node for loop")
+            print()
+        print("code gen in Body node return")
+        print()
         return program
 
 
@@ -367,13 +368,12 @@ class ExpressionNode(ASTnode):
     def typeCheck(self):
         self.outputType = self.expression.get_outputType()
 
-    def code_gen(self, line):
-        line += 1
+    def code_gen(self, program, line):
         print("code gen in expression node")
-        print("line num ", line)
-        print(self)
         print()
-        program = self.expression.code_gen(line)
+        program = self.expression.code_gen(program, line)
+        print("code gen in expression node return")
+        print()
         return program, line
 
 
@@ -437,13 +437,14 @@ class PrintStatementNode(ASTnode):
         self.returnString += ")"
         return self.returnString
 
-    def code_gen(self, line):
+    def code_gen(self, program, line):
         line += 1
         print("code gen in print statement node")
         print("line num ", line)
         print(self)
+        print(self.expressions)
         print()
-        program = "hello"
+        program = "Tm code here"
         return program
 
 
@@ -525,13 +526,13 @@ class NumberLiteralNode(ValueNode):
         ValueNode.__init__(self, number)
         self.outputType = "integer"
 
-    def code_gen(self, line):
+    def code_gen(self, program, line):
         line += 1
         print("code gen inside number literal node")
         print("line num ", line)
-        print(self)
+        print(self.information)
         print()
-        program = self
+        # program tm code
         return program, line
 
 
