@@ -183,13 +183,6 @@ class ASTnode(object):
                 return function_record
             #this block is used, simillar to previous block---#
             
-            #More ad-hoc implementation. This problem could be solved with the
-            #implementation of a program node
-            if isinstance(self, DefinitionsNode):
-                errorState = self.typeCheck()
-                if errorState != None:
-                    push(ErrorNode(errorState),function_record)
-            
             return self.information[position]
         
         
