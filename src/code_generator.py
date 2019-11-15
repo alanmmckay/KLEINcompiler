@@ -5,4 +5,9 @@ class Generator:
     def generate(self):
         line = 0
         program = self.ast.code_gen(line)
-        return program
+        program_str = ''
+
+        for line_num, stmt in enumerate(program):
+            program_str += str(line_num) + ': ' + stmt + '\n'
+
+        return program_str
