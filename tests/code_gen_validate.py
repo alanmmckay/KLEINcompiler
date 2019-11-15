@@ -33,14 +33,3 @@ program = gen.generate()
 print()
 print("program being returned in code_gen_validate")
 print(program)
-print()
-
-# for now I will output my trusty message cow!
-# print("------------------------------------")
-# print("| This is not yet finished!        |")
-# print("------------------------------------")
-# print("""         \   ^__^
-#           \  (oo)\_______
-#              (__)\       )\/
-#                  ||----w | \/
-#                  ||     ||""")

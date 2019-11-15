@@ -198,7 +198,6 @@ class ProgramNode(ASTnode):
         pass
 
     def code_gen(self, line):
-        print("code gen in program node")
         program = []
         program += self.definitionsNode.code_gen(line)
 
@@ -211,8 +210,6 @@ class ProgramNode(ASTnode):
                         'HALT 0,0,0']
 
         program = front_matter + program
-        print("code gen in program node return")
-        print()
         return program
 
 
@@ -245,17 +242,12 @@ class DefinitionsNode(ASTnode):
             return msg
 
     def code_gen(self, line):
-        print()
-        print("code gen in def node")
-        print()
         program = []
         for function in self.functions:
             symbol_table[function.get_name()] = len(program)
             program += function.code_gen(line)
 
         # Our first instruction is to set the PC to the address of the 'main' function
-        print("code gen in def node return")
-        print()
         return program
 
 
@@ -291,8 +283,6 @@ class FunctionNode(ASTnode):
 
     def code_gen(self, line):
         program = []
-        print("code gen in function node")
-        print()
 
         # INSERT TM STATEMENTS TO SAVE CURRENT REGISTER VALUES AND THEN MOVE
         # THE STACK POINTER
@@ -315,8 +305,6 @@ class FunctionNode(ASTnode):
         program.append('LD 7,0(6)')
 
         # Insert an instruction which says return to the address of the caller
-        print("code gen in function node return")
-        print()
         return program
 
 
@@ -372,16 +360,10 @@ class BodyNode(ASTnode):
                         return msg
 
     def code_gen(self, program, line):
-        print("code gen in Body node")
-        print()
         program = []
         for expression in reversed(self.expressions):
             program += expression.code_gen(program, line)
             line += 1
-            print("code gen in Body node for loop")
-            print()
-        print("code gen in Body node return")
-        print()
 
         return program
 
@@ -401,13 +383,8 @@ class ExpressionNode(ASTnode):
         self.outputType = self.expression.get_outputType()
 
     def code_gen(self, program, line):
-        print("code gen in expression node")
-        print()
 
         program = self.expression.code_gen(program, line)
-
-        print("code gen in expression node return")
-        print()
         return program  # , line
 
 
@@ -473,15 +450,10 @@ class PrintStatementNode(ASTnode):
 
     def code_gen(self, program, line):
         line += 1
-        print("code gen in print statement node")
-        print("line num ", line)
-        print(self)
         program = []
         for expr in self.expressions:
             program += expr.code_gen(program, line)
             program.append('OUT 0,0,0')
-        print(self.expressions)
-        print()
         return program
 
 
@@ -565,10 +537,6 @@ class NumberLiteralNode(ValueNode):
 
     def code_gen(self, program, line):
         line += 1
-        print("code gen inside number literal node")
-        print("line num ", line)
-        print(self.information)
-        print()
         program = ['LDC 0,' + str(self.value) + '(0)']
         # program tm code
         return program  # , line
