@@ -199,7 +199,18 @@ class ProgramNode(ASTnode):
 
     def code_gen(self, line):
         print("code gen in program node")
-        program = self.definitionsNode.code_gen(line)
+        program = []
+        program += self.definitionsNode.code_gen(line)
+
+        front_matter = ['LDC 6,' + str(len(program) + 6) + '(0)',
+                        'LDC 1,2(0)',
+                        'ADD 1,7,1',
+                        'ST 1,0(6)',
+                        'LDA 7,' + str(symbol_table['main'] + 2) + '(7)',
+                        'OUT 0,0,0',
+                        'HALT 0,0,0']
+
+        program = front_matter + program
         print("code gen in program node return")
         print()
         return program
@@ -237,8 +248,12 @@ class DefinitionsNode(ASTnode):
         print()
         print("code gen in def node")
         print()
+        program = []
         for function in self.functions:
-            program = function.code_gen(line)
+            symbol_table[function.get_name()] = len(program)
+            program += function.code_gen(line)
+
+        # Our first instruction is to set the PC to the address of the 'main' function
         print("code gen in def node return")
         print()
         return program
@@ -275,10 +290,31 @@ class FunctionNode(ASTnode):
             return msg
 
     def code_gen(self, line):
-        program = self.get_name()
+        program = []
         print("code gen in function node")
         print()
-        program = self.bodyNode.code_gen(program, line)
+
+        # INSERT TM STATEMENTS TO SAVE CURRENT REGISTER VALUES AND THEN MOVE
+        # THE STACK POINTER
+
+        # frame_size represents the size of the stack frame, which might vary for each function
+        # (1 space for return address, 1 for return value, 7 for register savings, one for each argument)
+        frame_size = 9 + len(self.formals.get_formals())
+
+        # Save the registers to the appropriate positions in the stack frame
+        for register_num in range(1,7):
+            # move the given register to (3 + r#) past current top of stack
+            program.append( 'ST ' + str(register_num) + ',' + str(3 + register_num) + '(6)')
+
+        program += self.bodyNode.code_gen(program, line)
+
+        # Restore the registers (register 6 last, of course)
+        for register_num in range(1,7):
+            program.append( 'LD ' + str(register_num) + ',' + str(3 + register_num) + '(6)')
+
+        program.append('LD 7,0(6)')
+
+        # Insert an instruction which says return to the address of the caller
         print("code gen in function node return")
         print()
         return program
@@ -338,13 +374,15 @@ class BodyNode(ASTnode):
     def code_gen(self, program, line):
         print("code gen in Body node")
         print()
-        for expression in self.expressions:
-            program = expression.code_gen(program, line)
+        program = []
+        for expression in reversed(self.expressions):
+            program += expression.code_gen(program, line)
             line += 1
             print("code gen in Body node for loop")
             print()
         print("code gen in Body node return")
         print()
+
         return program
 
 
@@ -365,10 +403,12 @@ class ExpressionNode(ASTnode):
     def code_gen(self, program, line):
         print("code gen in expression node")
         print()
+
         program = self.expression.code_gen(program, line)
+
         print("code gen in expression node return")
         print()
-        return program, line
+        return program#, line
 
 
 # --- --- #
@@ -436,9 +476,12 @@ class PrintStatementNode(ASTnode):
         print("code gen in print statement node")
         print("line num ", line)
         print(self)
+        program = []
+        for expr in self.expressions:
+            program += expr.code_gen(program, line)
+            program.append('OUT 0,0,0')
         print(self.expressions)
         print()
-        program = "Tm code here"
         return program
 
       
@@ -526,8 +569,9 @@ class NumberLiteralNode(ValueNode):
         print("line num ", line)
         print(self.information)
         print()
+        program = ['LDC 0,' + str(self.value) + '(0)']
         # program tm code
-        return program, line
+        return program#, line
 
 
 class BooleanLiteralNode(ValueNode):
