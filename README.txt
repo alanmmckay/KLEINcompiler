@@ -13,6 +13,23 @@ TinyMachine.
 
 --- Development Stages:
 
+-- CodeGenerator, Project 5:
+
+    Associated implementation files:
+    -print-one.kln
+    -AST_node.py
+    -code-generator.py
+    
+    Code Generator Description:
+    The first phase of the code generator is that it starts jumping to the main function and then saves all of      
+    
+    
+    
+    
+   
+
+
+
 -- Parser, Project 3:
 
     Associated implementation files:
