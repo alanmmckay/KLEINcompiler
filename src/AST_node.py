@@ -9,6 +9,8 @@ function_record = []
 # used to keep track of the function definition
 # that is currently being processed
 
+symbol_table = {}
+
 function_table = {}
 
 #--- Symbol Table Structure ---#
@@ -22,7 +24,7 @@ def symbolTableBuilder(functionTable):
             formalName = tup[0].get_value()
             symbolTable[name][formalName] = {}
     return symbolTable
-            
+  
 
 def nodeBuilder(semantic_stack, nodeType):
     if nodeType == ExpressionNode:
@@ -207,6 +209,13 @@ class ProgramNode(ASTnode):
         
     def typeCheck(self):
         pass
+
+    def code_gen(self, line):
+        print("code gen in program node")
+        program = self.definitionsNode.code_gen(line)
+        print("code gen in program node return")
+        print()
+        return program
 
 
 class DefinitionsNode(ASTnode):
