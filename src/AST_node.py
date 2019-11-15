@@ -9,9 +9,20 @@ function_record = []
 # used to keep track of the function definition
 # that is currently being processed
 
-symbol_table = {}
-
 function_table = {}
+
+#--- Symbol Table Structure ---#
+#-- symbolTable[functionName][variableName] = {variable information}
+def symbolTableBuilder(functionTable):
+    symbolTable = {}
+    for entry in functionTable.items():
+        name = entry[0]
+        symbolTable[name] = {}
+        for tup in entry[1].get_formals():
+            formalName = tup[0].get_value()
+            symbolTable[name][formalName] = {}
+    return symbolTable
+            
 
 def nodeBuilder(semantic_stack, nodeType):
     if nodeType == ExpressionNode:
