@@ -26,10 +26,16 @@ p = Parser(s)
 # get a tree
 ast = p.parse()
 
+# put that tree into generator objet
 gen = Generator(ast)
 
+# run code gen on the node
 program = gen.generate()
 
-print()
-print("program being returned in code_gen_validate")
-print(program)
+#  output to a tm file
+FILE_PATH = FILE_PATH.strip(".kln")
+filename = FILE_PATH + ".tm"
+output = open(filename, "w")
+output.write(program)
+print("TM code saved to file {}".format(filename))
+
