@@ -19,12 +19,18 @@ TinyMachine.
     -print-one.kln
     -AST_node.py
     -code-generator.py
+
+    How to run:
+    ./kleinc programs/print-one.kln
     
     Code Generator Description:
     The first phase of the code generator is that it starts jumping to the main 
     function and then saves all of the registers. It then executes the body code 
     and restores the registers. Lastly , it handles the literals and the print
     statement.
+
+    Documentation:
+    - in doc directory inside of codgen director.
     
     What is not finished:
     -better register management
