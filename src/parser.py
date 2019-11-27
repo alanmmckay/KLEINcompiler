@@ -108,7 +108,7 @@ class Parser:
 
         else:
             # print statement here for a check
-            print(self.debug_semantic_string)
+            # print(self.debug_semantic_string)
             #print(semantic_stack)
             result = top(semantic_stack).process_node()
             if isinstance(result, list):
