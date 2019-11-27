@@ -10,21 +10,16 @@ function_record = []
 # that is currently being processed
 
 symbol_table = {}
-
 function_table = {}
 
-#--- Symbol Table Structure ---#
-#-- symbolTable[functionName][variableName] = {variable information}
-def symbolTableBuilder(functionTable):
-    symbolTable = {}
-    for entry in functionTable.items():
-        name = entry[0]
-        symbolTable[name] = {}
-        for tup in entry[1].get_formals():
-            formalName = tup[0].get_value()
-            symbolTable[name][formalName] = {}
-    return symbolTable
-  
+temp_vars = [0]
+
+# This function should return the offset from the stack pointer of the next open
+# memory location for saving a temporary variable (and update the count)
+def get_open_place( ):
+    next_open = temp_vars.pop( )
+    temp_vars.append( next_open + 1 )
+    return next_open
 
 def nodeBuilder(semantic_stack, nodeType):
     if nodeType == ExpressionNode:
@@ -212,7 +207,18 @@ class ProgramNode(ASTnode):
 
     def code_gen(self, line):
         print("code gen in program node")
-        program = self.definitionsNode.code_gen(line)
+        program = []
+        program += self.definitionsNode.code_gen(line)
+
+        front_matter = ['LDC 6,' + str(len(program) + 6) + '(0)',
+                        'LDC 1,2(0)',
+                        'ADD 1,7,1',
+                        'ST 1,0(6)',
+                        'LDA 7,' + str(symbol_table['main'] + 2) + '(7)',
+                        'OUT 0,0,0',
+                        'HALT 0,0,0']
+
+        program = front_matter + program
         print("code gen in program node return")
         print()
         return program
@@ -250,8 +256,12 @@ class DefinitionsNode(ASTnode):
         print()
         print("code gen in def node")
         print()
+        program = []
         for function in self.functions:
-            program = function.code_gen(line)
+            symbol_table[function.get_name()] = len(program)
+            program += function.code_gen(line)
+
+        # Our first instruction is to set the PC to the address of the 'main' function
         print("code gen in def node return")
         print()
         return program
@@ -288,10 +298,37 @@ class FunctionNode(ASTnode):
             return msg
 
     def code_gen(self, line):
-        program = self.get_name()
+        program = []
         print("code gen in function node")
         print()
-        program = self.bodyNode.code_gen(program, line)
+
+        # INSERT TM STATEMENTS TO SAVE CURRENT REGISTER VALUES AND THEN MOVE
+        # THE STACK POINTER
+
+        # frame_size represents the size of the stack frame, which might vary for each function
+        # (1 space for return address, 1 for return value, 6 for register savings, one for each argument)
+        frame_size = 10 + len(self.formals.get_formals())
+
+        # Create a new starting point for temporary variables
+        temp_vars.append(frame_size)
+
+        # Save the registers to the appropriate positions in the stack frame
+        for register_num in range(1,7):
+            # move the given register to (3 + r#) past current top of stack +3 is because 1st return addr, return value, have to jump to 3rd thing
+            program.append( 'ST ' + str(register_num) + ',' + str(3 + register_num) + '(6)')
+
+        program += self.bodyNode.code_gen(program, line)
+
+        # Restore the registers (register 6 last, of course)
+        for register_num in range(1,7):
+            program.append( 'LD ' + str(register_num) + ',' + str(3 + register_num) + '(6)')
+
+        program.append('LD 7,0(6)')
+
+        # Function has been generated, remove the temp var counter from the list
+        temp_vars.pop( )
+
+        # Insert an instruction which says return to the address of the caller
         print("code gen in function node return")
         print()
         return program
@@ -351,13 +388,15 @@ class BodyNode(ASTnode):
     def code_gen(self, program, line):
         print("code gen in Body node")
         print()
-        for expression in self.expressions:
-            program = expression.code_gen(program, line)
+        program = []
+        for expression in reversed(self.expressions):
+            program += expression.code_gen(program, line)
             line += 1
             print("code gen in Body node for loop")
             print()
         print("code gen in Body node return")
         print()
+
         return program
 
 
@@ -378,10 +417,12 @@ class ExpressionNode(ASTnode):
     def code_gen(self, program, line):
         print("code gen in expression node")
         print()
+
         program = self.expression.code_gen(program, line)
+
         print("code gen in expression node return")
         print()
-        return program, line
+        return program#, line
 
 
 # --- --- #
@@ -449,9 +490,12 @@ class PrintStatementNode(ASTnode):
         print("code gen in print statement node")
         print("line num ", line)
         print(self)
+        program = []
+        for expr in self.expressions:
+            program += expr.code_gen(program, line)
+            program.append('OUT 0,0,0')
         print(self.expressions)
         print()
-        program = "Tm code here"
         return program
 
       
@@ -539,8 +583,17 @@ class NumberLiteralNode(ValueNode):
         print("line num ", line)
         print(self.information)
         print()
+
+        # Get a relative (to stack pointer) address to save this constant to
+        self.place = get_open_place( )
+
+        # Load the constant value into register 0, and then save this
+        # register to the temporary variable location 'place'
+        program = ['LDC 0,' + str(self.value) + '(0)',
+                   'ST 0,' + str(self.place) + '(6)']
+
         # program tm code
-        return program, line
+        return program#, line
 
 
 class BooleanLiteralNode(ValueNode):
@@ -556,7 +609,6 @@ class TypeNode(ValueNode):
 
 
 # --- Values can have an operation --- #
-
 class Operator(ValueNode):
     def __init__(self, operand):
         ValueNode.__init__(self, operand)
@@ -564,7 +616,6 @@ class Operator(ValueNode):
 
 
 # --- An operator can be a unary --- #
-
 class UnaryOperator(Operator):
     def __init__(self, operand):
         Operator.__init__(self, operand)
@@ -689,12 +740,48 @@ class PlusNode(ArithmeticOperation):
         self.operatorType = "+"
         self.outputType = "integer"
 
+    def code_gen(self, program, line):
+        left, right = super().get_values()
+
+        # Generate the code for the left and right-hand sides of the addition
+        # (also updating the 'place' values for both)
+        program = left.code_gen(program, line) + right.code_gen(program, line)
+
+        # Get the next open place for me to save the result of the addition
+        self.place = get_open_place()
+
+        # Load the values for the left and right sides into registers 0 and 1,
+        # compute the sum, and save to self.place
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             'ADD 0,0,1', # Add registers 0 and 1, saving the result in register 0
+                             'ST 0,' + str(self.place) + '(6)']
+        return program
+
 
 class MinusNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "-"
         self.outputType = "integer"
+
+    def code_gen(self, program, line):
+        left, right = super().get_values()
+
+        # Generate the code for the left and right-hand sides of the addition
+        # (also updating the 'place' values for both)
+        program = left.code_gen(program, line) + right.code_gen(program, line)
+
+        # Get the next open place for me to save the result of the addition
+        self.place = get_open_place()
+
+        # Load the values for the left and right sides into registers 0 and 1,
+        # compute the difference, and save to self.place
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             'SUB 0,0,1', # SUB registers 0 and 1, saving the result in register 0
+                             'ST 0,' + str(self.place) + '(6)']
+        return program
 
 
 class AndNode(BooleanConnective):
@@ -703,6 +790,9 @@ class AndNode(BooleanConnective):
         self.operatorType = "and"
         self.outputType = "boolean"
 
+    def code_gen(self, line):
+        pass
+
 
 class MultiplyNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
@@ -710,9 +800,15 @@ class MultiplyNode(ArithmeticOperation):
         self.operatorType = "*"
         self.outputType = "integer"
 
+    def code_gen(self, line):
+        pass
+
 
 class DivisionNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "/"
         self.outputType = "integer"
+
+    def code_gen(self, line):
+        pass 
