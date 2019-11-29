@@ -298,6 +298,7 @@ class FunctionNode(ASTnode):
             return msg
 
     def code_gen(self, line):
+        current_function = str(self.identifierNode)
         program = []
         print("code gen in function node")
         print()
@@ -315,15 +316,15 @@ class FunctionNode(ASTnode):
         # Save the registers to the appropriate positions in the stack frame
         for register_num in range(1,7):
             # move the given register to (3 + r#) past current top of stack +3 is because 1st return addr, return value, have to jump to 3rd thing
-            program.append( 'ST ' + str(register_num) + ',' + str(3 + register_num) + '(6)')
+            program.append( 'ST ' + str(register_num) + ',' + str(3 + register_num) + '(6) : '+current_function+' FunctionNode storage')
 
         program += self.bodyNode.code_gen(program, line)
 
         # Restore the registers (register 6 last, of course)
         for register_num in range(1,7):
-            program.append( 'LD ' + str(register_num) + ',' + str(3 + register_num) + '(6)')
+            program.append( 'LD ' + str(register_num) + ',' + str(3 + register_num) + '(6) : '+current_function+' FunctionNode load')
 
-        program.append('LD 7,0(6)')
+        program.append('LD 7,0(6) : '+current_function+' FunctionNode line return')
 
         # Function has been generated, remove the temp var counter from the list
         temp_vars.pop( )
@@ -493,7 +494,7 @@ class PrintStatementNode(ASTnode):
         program = []
         for expr in self.expressions:
             program += expr.code_gen(program, line)
-            program.append('OUT 0,0,0')
+            program.append('OUT 0,0,0 : PrintStatementNode output')
         print(self.expressions)
         print()
         return program
@@ -589,9 +590,8 @@ class NumberLiteralNode(ValueNode):
 
         # Load the constant value into register 0, and then save this
         # register to the temporary variable location 'place'
-        program = ['LDC 0,' + str(self.value) + '(0)',
-                   'ST 0,' + str(self.place) + '(6)']
-
+        program = ['LDC 0,' + str(self.value) + '(0) : NumberLiteralNode constant',
+                   'ST 0,' + str(self.place) + '(6) : NumberLiteralNode storage']
         # program tm code
         return program#, line
 
@@ -689,6 +689,9 @@ class BooleanConnective(BinaryOperator):
     def typeCheck(self):
         if self.value.outputType != "boolean" or self.value1.outputType != "boolean":
             return self.build_error()
+        
+    def code_gen(self, program, line):
+        pass
 
 
 class BooleanComparison(BinaryOperator):
@@ -699,6 +702,9 @@ class BooleanComparison(BinaryOperator):
     def typeCheck(self):
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
             return self.build_error()
+        
+    def code_gen(self, program, line):
+        pass
 
 
 class ArithmeticOperation(BinaryOperator):
@@ -710,7 +716,26 @@ class ArithmeticOperation(BinaryOperator):
     def typeCheck(self):  # code duplication
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
             return self.build_error()
+    
+    
+    def code_gen(self, program, line):
+        opCode_dict = {'+' : 'ADD', '-' : 'SUB', '*' : 'MUL', '/' : 'DIV'}
+        
+        left, right = super().get_values()
 
+        # Generate the code for the left and right-hand sides of the addition
+        # (also updating the 'place' values for both)
+        program = left.code_gen(program, line) + right.code_gen(program, line)
+        # Get the next open place for me to save the result of the addition
+        self.place = get_open_place()
+
+        # Load the values for the left and right sides into registers 0 and 1,
+        # compute the sum, and save to self.place
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             opCode_dict[self.operatorType] +' 0,0,1', # Add registers 0 and 1, saving the result in register 0
+                             'ST 0,' + str(self.place) + '(6)']
+        return program
 
 # -- # Binary Operators: 
 class LessThanNode(BooleanComparison):
@@ -740,48 +765,12 @@ class PlusNode(ArithmeticOperation):
         self.operatorType = "+"
         self.outputType = "integer"
 
-    def code_gen(self, program, line):
-        left, right = super().get_values()
-
-        # Generate the code for the left and right-hand sides of the addition
-        # (also updating the 'place' values for both)
-        program = left.code_gen(program, line) + right.code_gen(program, line)
-
-        # Get the next open place for me to save the result of the addition
-        self.place = get_open_place()
-
-        # Load the values for the left and right sides into registers 0 and 1,
-        # compute the sum, and save to self.place
-        program = program + ['LD 0,' + str(left.place) + '(6)',
-                             'LD 1,' + str(right.place) + '(6)',
-                             'ADD 0,0,1', # Add registers 0 and 1, saving the result in register 0
-                             'ST 0,' + str(self.place) + '(6)']
-        return program
-
 
 class MinusNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "-"
         self.outputType = "integer"
-
-    def code_gen(self, program, line):
-        left, right = super().get_values()
-
-        # Generate the code for the left and right-hand sides of the addition
-        # (also updating the 'place' values for both)
-        program = left.code_gen(program, line) + right.code_gen(program, line)
-
-        # Get the next open place for me to save the result of the addition
-        self.place = get_open_place()
-
-        # Load the values for the left and right sides into registers 0 and 1,
-        # compute the difference, and save to self.place
-        program = program + ['LD 0,' + str(left.place) + '(6)',
-                             'LD 1,' + str(right.place) + '(6)',
-                             'SUB 0,0,1', # SUB registers 0 and 1, saving the result in register 0
-                             'ST 0,' + str(self.place) + '(6)']
-        return program
 
 
 class AndNode(BooleanConnective):
@@ -790,18 +779,12 @@ class AndNode(BooleanConnective):
         self.operatorType = "and"
         self.outputType = "boolean"
 
-    def code_gen(self, line):
-        pass
-
 
 class MultiplyNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "*"
         self.outputType = "integer"
-
-    def code_gen(self, line):
-        pass
 
 
 class DivisionNode(ArithmeticOperation):
@@ -810,5 +793,3 @@ class DivisionNode(ArithmeticOperation):
         self.operatorType = "/"
         self.outputType = "integer"
 
-    def code_gen(self, line):
-        pass 
