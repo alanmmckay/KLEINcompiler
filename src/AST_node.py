@@ -673,10 +673,21 @@ class NegationNode(UnaryOperator):
         UnaryOperator.__init__(self, operand)
         self.operatorType = "negate"
         self.outputType = "integer"
-
+        
     def typeCheck(self):
         if self.value.outputType != "integer":
             return self.build_error()
+        
+    def code_gen(self, program, line):
+        line += 1
+        print("code gen inside negation node")
+        print("line num, line")
+        
+        self.place = get_open_place()
+        program = ['LDC 0,' + str(0 - self.value.get_value()) + '(0) : NegationNode value',
+                   'ST 0,' + str(self.place) + '(6) : NegationNode storage']
+        
+        return program
 
 
 # --- A Binary Operator has two values --- #
