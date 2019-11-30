@@ -651,20 +651,32 @@ class NotNode(UnaryOperator):
         UnaryOperator.__init__(self, operand)
         self.operatorType = "not"
         self.outputType = "boolean"
+        print(self.information)
 
     def typeCheck(self):
         if self.value.outputType != "boolean":
             return self.build_error()
         
     def code_gen(self, program, line):
-        opCode_dict = {"true" : "0", "false" : "1"}
         line += 1
         print("code gen inside not node")
         print("line num ", line)
-        self.place = get_open_place()
+        
+        #run codegen on whatever expressions exist within this node
+        program = self.value.code_gen(program, line)
+        
+        currentBool = int(program[0][6])
+        print("CURRENT BOOL!!!")
+        print(currentBool)
+        if currentBool == 0 :
+            notBool = 1
+        else:
+            notBool = 0
+            
 
-        program = ['LDC 0,' + opCode_dict[str(self.value)] + '(0) : NotNode value',
-                   'ST 0,' + str(self.place) + '(6) : NotNode storage']
+        program[0] = 'LDC 0,' + str(notBool) + '(0) : NotNode value'
+        '''program = ['LDC 0,' + opCode_dict[str(self.value)] + '(0) : NotNode value',
+                   'ST 0,' + str(self.place) + '(6) : NotNode storage']'''
         
         return program
 
@@ -679,12 +691,15 @@ class NegationNode(UnaryOperator):
             return self.build_error()
         
     def code_gen(self, program, line):
+        pass
         line += 1
         print("code gen inside negation node")
         print("line num, line")
         
+        
+        
         self.place = get_open_place()
-        program = ['LDC 0,' + str(0 - self.value.get_value()) + '(0) : NegationNode value',
+        program = ['LDC 0,' + str(0 - int(str(self.value))) + '(0) : NegationNode value',
                    'ST 0,' + str(self.place) + '(6) : NegationNode storage']
         
         return program
