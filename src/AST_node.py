@@ -655,7 +655,18 @@ class NotNode(UnaryOperator):
     def typeCheck(self):
         if self.value.outputType != "boolean":
             return self.build_error()
+        
+    def code_gen(self, program, line):
+        opCode_dict = {"true" : "0", "false" : "1"}
+        line += 1
+        print("code gen inside not node")
+        print("line num ", line)
+        self.place = get_open_place()
 
+        program = ['LDC 0,' + opCode_dict[str(self.value)] + '(0) : NotNode value',
+                   'ST 0,' + str(self.place) + '(6) : NotNode storage']
+        
+        return program
 
 class NegationNode(UnaryOperator):
     def __init__(self, operand):
