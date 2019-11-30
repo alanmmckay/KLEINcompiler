@@ -9,9 +9,9 @@ function_record = []
 # used to keep track of the function definition
 # that is currently being processed
 
-symbol_table = {}
 function_table = {}
 
+#temp_vars stores available dmem addresses
 temp_vars = [0]
 
 # This function should return the offset from the stack pointer of the next open
@@ -214,7 +214,7 @@ class ProgramNode(ASTnode):
                         'LDC 1,2(0)',
                         'ADD 1,7,1',
                         'ST 1,0(6)',
-                        'LDA 7,' + str(symbol_table['main'] + 2) + '(7)',
+                        'LDA 7,' + str(function_table['main']['stack_position'] + 2) + '(7)',
                         'OUT 0,0,0',
                         'HALT 0,0,0']
 
@@ -235,7 +235,8 @@ class DefinitionsNode(ASTnode):
         for function in self.functions:
             functionName = function.get_name()
             if functionName not in function_table:
-                function_table[functionName] = function
+                function_table[functionName] = {}
+                function_table[functionName]["functionNode"] = function
             else:
                 self.functionSwitch = functionName
                 continue
@@ -258,7 +259,7 @@ class DefinitionsNode(ASTnode):
         print()
         program = []
         for function in self.functions:
-            symbol_table[function.get_name()] = len(program)
+            function_table[function.get_name()]["stack_position"] = len(program)
             program += function.code_gen(line)
 
         # Our first instruction is to set the PC to the address of the 'main' function
@@ -464,7 +465,7 @@ class FunctionCallNode(ASTnode):
 
     def typeCheck(self):
         if self.identifierNode.get_value() in function_table:
-            self.outputType = function_table[self.identifierNode.get_value()].get_outputType()
+            self.outputType = function_table[self.identifierNode.get_value()]["functionNode"].get_outputType()
         else:
             msg = "Function call {} is undefined."
             msg = msg.format(self.identifierNode.get_value())
@@ -553,7 +554,7 @@ class IdentifierNode(ValueNode):
     def typeCheck(self):
         existBool = 0
         current_function = function_record[-1]
-        formals = function_table[current_function].get_formals()
+        formals = function_table[current_function]["functionNode"].get_formals()
         for formal in formals:
             if self.value == formal[0].get_value():
                 existBool = 1
