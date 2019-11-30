@@ -601,7 +601,19 @@ class BooleanLiteralNode(ValueNode):
     def __init__(self, boolValue):
         ValueNode.__init__(self, boolValue)
         self.outputType = "boolean"
-
+    
+    def code_gen(self, program, line):
+        opCode_dict = {"true": "1", "false": "0"}
+        line += 1
+        print("code gen inside boolean literal node")
+        print("line num ", line)
+        print(self.information)
+        
+        self.place = get_open_place( )
+        program = ['LDC 0,' + opCode_dict[self.value] + '(0) : BooleanLiteralNode value', 
+                   'ST 0,' + str(self.place) + '(6) : BooleanLiteralNode storage']
+        
+        return program
 
 class TypeNode(ValueNode):
     def __init__(self, typeValue):
