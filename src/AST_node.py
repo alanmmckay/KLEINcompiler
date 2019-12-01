@@ -210,9 +210,9 @@ class ProgramNode(ASTnode):
         program = []
         program += self.definitionsNode.code_gen(line)
 
-        front_matter = ['LDC 6,' + str(len(program) + 6) + '(0)',
-                        'LDC 1,2(0)',
-                        'ADD 1,7,1',
+        front_matter = ['LDC 6,' + str(len(program) + 6) + '(5)',
+                        'LDC 1,2(5)',#r1 is now set to 2
+                        'ADD 1,7,1',#r1 is now set to 6
                         'ST 1,0(6)',
                         'LDA 7,' + str(function_table['main']['stack_position'] + 2) + '(7)',
                         'OUT 0,0,0',
@@ -421,7 +421,7 @@ class ExpressionNode(ASTnode):
         print()
 
         program = self.expression.code_gen(program, line)
-
+        
         print("code gen in expression node return")
         print()
         return program#, line
@@ -591,7 +591,7 @@ class NumberLiteralNode(ValueNode):
 
         # Load the constant value into register 0, and then save this
         # register to the temporary variable location 'place'
-        program = ['LDC 0,' + str(self.value) + '(0) : NumberLiteralNode constant',
+        program = ['LDC 0,' + str(self.value) + '(5) : NumberLiteralNode constant',
                    'ST 0,' + str(self.place) + '(6) : NumberLiteralNode storage']
         # program tm code
         return program#, line
@@ -610,7 +610,7 @@ class BooleanLiteralNode(ValueNode):
         print(self.information)
         
         self.place = get_open_place( )
-        program = ['LDC 0,' + opCode_dict[self.value] + '(0) : BooleanLiteralNode value', 
+        program = ['LDC 0,' + opCode_dict[self.value] + '(5) : BooleanLiteralNode value', 
                    'ST 0,' + str(self.place) + '(6) : BooleanLiteralNode storage']
         
         return program
@@ -672,7 +672,7 @@ class NotNode(UnaryOperator):
         else:
             notBool = 0
             
-        program[0] = 'LDC 0,' + str(notBool) + '(0) : NotNode value, derived from boolean literal node'
+        program[0] = 'LDC 0,' + str(notBool) + '(5) : NotNode value, derived from boolean literal node'
         
         return program
 
@@ -821,7 +821,6 @@ class OrNode(BooleanConnective):
         self.outputType = "boolean"
         
     def code_gen(self, program, line):
-        pass
         left, right = super().get_values()
         
         program = left.code_gen(program, line) + right.code_gen(program, line)
@@ -830,20 +829,16 @@ class OrNode(BooleanConnective):
         
         program = program + ['LD 0,' + str(left.place) + '(6)',
                              'LD 1,' + str(right.place) + '(6)',
-                             'JNE 0',
-                             'JNE 1',
-                             'LDC 0,0(0)'
+                             'JNE 0,5(7)',
+                             'JNE 1,4(7)',
+                             'LDC 0,0(5)'
                              'ST 0,' + str(self.place) + '(6)',
-                             'LDA',
-                             'LDC 0,1(0)',
+                             'LDA 7,2(7)',
+                             'LDC 0,1(5)',
                              'ST 0,' + str(self.place) + '(6)']
         
-        #place the sides
-        #check if at least one of the sides is 1
-        #if so, jump to a store command of 1. carry on to end
-        #if not, store a zero and jump to end
+        return program
         
-
 
 class PlusNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
