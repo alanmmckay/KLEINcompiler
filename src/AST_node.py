@@ -9,9 +9,9 @@ function_record = []
 # used to keep track of the function definition
 # that is currently being processed
 
-symbol_table = {}
 function_table = {}
 
+#temp_vars stores available dmem addresses
 temp_vars = [0]
 
 # This function should return the offset from the stack pointer of the next open
@@ -214,7 +214,7 @@ class ProgramNode(ASTnode):
                         'LDC 1,2(0)',
                         'ADD 1,7,1',
                         'ST 1,0(6)',
-                        'LDA 7,' + str(symbol_table['main'] + 2) + '(7)',
+                        'LDA 7,' + str(function_table['main']['stack_position'] + 2) + '(7)',
                         'OUT 0,0,0',
                         'HALT 0,0,0']
 
@@ -235,7 +235,8 @@ class DefinitionsNode(ASTnode):
         for function in self.functions:
             functionName = function.get_name()
             if functionName not in function_table:
-                function_table[functionName] = function
+                function_table[functionName] = {}
+                function_table[functionName]["functionNode"] = function
             else:
                 self.functionSwitch = functionName
                 continue
@@ -258,7 +259,7 @@ class DefinitionsNode(ASTnode):
         print()
         program = []
         for function in self.functions:
-            symbol_table[function.get_name()] = len(program)
+            function_table[function.get_name()]["stack_position"] = len(program)
             program += function.code_gen(line)
 
         # Our first instruction is to set the PC to the address of the 'main' function
@@ -298,6 +299,7 @@ class FunctionNode(ASTnode):
             return msg
 
     def code_gen(self, line):
+        current_function = str(self.identifierNode)
         program = []
         print("code gen in function node")
         print()
@@ -315,15 +317,15 @@ class FunctionNode(ASTnode):
         # Save the registers to the appropriate positions in the stack frame
         for register_num in range(1,7):
             # move the given register to (3 + r#) past current top of stack +3 is because 1st return addr, return value, have to jump to 3rd thing
-            program.append( 'ST ' + str(register_num) + ',' + str(3 + register_num) + '(6)')
+            program.append( 'ST ' + str(register_num) + ',' + str(3 + register_num) + '(6) : '+current_function+' FunctionNode storage')
 
         program += self.bodyNode.code_gen(program, line)
 
         # Restore the registers (register 6 last, of course)
         for register_num in range(1,7):
-            program.append( 'LD ' + str(register_num) + ',' + str(3 + register_num) + '(6)')
+            program.append( 'LD ' + str(register_num) + ',' + str(3 + register_num) + '(6) : '+current_function+' FunctionNode load')
 
-        program.append('LD 7,0(6)')
+        program.append('LD 7,0(6) : '+current_function+' FunctionNode line return')
 
         # Function has been generated, remove the temp var counter from the list
         temp_vars.pop( )
@@ -463,7 +465,7 @@ class FunctionCallNode(ASTnode):
 
     def typeCheck(self):
         if self.identifierNode.get_value() in function_table:
-            self.outputType = function_table[self.identifierNode.get_value()].get_outputType()
+            self.outputType = function_table[self.identifierNode.get_value()]["functionNode"].get_outputType()
         else:
             msg = "Function call {} is undefined."
             msg = msg.format(self.identifierNode.get_value())
@@ -493,7 +495,7 @@ class PrintStatementNode(ASTnode):
         program = []
         for expr in self.expressions:
             program += expr.code_gen(program, line)
-            program.append('OUT 0,0,0')
+            program.append('OUT 0,0,0 : PrintStatementNode output')
         print(self.expressions)
         print()
         return program
@@ -552,7 +554,7 @@ class IdentifierNode(ValueNode):
     def typeCheck(self):
         existBool = 0
         current_function = function_record[-1]
-        formals = function_table[current_function].get_formals()
+        formals = function_table[current_function]["functionNode"].get_formals()
         for formal in formals:
             if self.value == formal[0].get_value():
                 existBool = 1
@@ -589,9 +591,8 @@ class NumberLiteralNode(ValueNode):
 
         # Load the constant value into register 0, and then save this
         # register to the temporary variable location 'place'
-        program = ['LDC 0,' + str(self.value) + '(0)',
-                   'ST 0,' + str(self.place) + '(6)']
-
+        program = ['LDC 0,' + str(self.value) + '(0) : NumberLiteralNode constant',
+                   'ST 0,' + str(self.place) + '(6) : NumberLiteralNode storage']
         # program tm code
         return program#, line
 
@@ -600,7 +601,19 @@ class BooleanLiteralNode(ValueNode):
     def __init__(self, boolValue):
         ValueNode.__init__(self, boolValue)
         self.outputType = "boolean"
-
+    
+    def code_gen(self, program, line):
+        opCode_dict = {"true": "1", "false": "0"}
+        line += 1
+        print("code gen inside boolean literal node")
+        print("line num ", line)
+        print(self.information)
+        
+        self.place = get_open_place( )
+        program = ['LDC 0,' + opCode_dict[self.value] + '(0) : BooleanLiteralNode value', 
+                   'ST 0,' + str(self.place) + '(6) : BooleanLiteralNode storage']
+        
+        return program
 
 class TypeNode(ValueNode):
     def __init__(self, typeValue):
@@ -642,17 +655,39 @@ class NotNode(UnaryOperator):
     def typeCheck(self):
         if self.value.outputType != "boolean":
             return self.build_error()
+        
+    def code_gen(self, program, line):
+        opCode_dict = {"true" : "0", "false" : "1"}
+        line += 1
+        print("code gen inside not node")
+        print("line num ", line)
+        self.place = get_open_place()
 
+        program = ['LDC 0,' + opCode_dict[str(self.value)] + '(0) : NotNode value',
+                   'ST 0,' + str(self.place) + '(6) : NotNode storage']
+        
+        return program
 
 class NegationNode(UnaryOperator):
     def __init__(self, operand):
         UnaryOperator.__init__(self, operand)
         self.operatorType = "negate"
         self.outputType = "integer"
-
+        
     def typeCheck(self):
         if self.value.outputType != "integer":
             return self.build_error()
+        
+    def code_gen(self, program, line):
+        line += 1
+        print("code gen inside negation node")
+        print("line num, line")
+        
+        self.place = get_open_place()
+        program = ['LDC 0,' + str(0 - self.value.get_value()) + '(0) : NegationNode value',
+                   'ST 0,' + str(self.place) + '(6) : NegationNode storage']
+        
+        return program
 
 
 # --- A Binary Operator has two values --- #
@@ -689,6 +724,9 @@ class BooleanConnective(BinaryOperator):
     def typeCheck(self):
         if self.value.outputType != "boolean" or self.value1.outputType != "boolean":
             return self.build_error()
+        
+    def code_gen(self, program, line):
+        pass
 
 
 class BooleanComparison(BinaryOperator):
@@ -699,6 +737,9 @@ class BooleanComparison(BinaryOperator):
     def typeCheck(self):
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
             return self.build_error()
+        
+    def code_gen(self, program, line):
+        pass
 
 
 class ArithmeticOperation(BinaryOperator):
@@ -710,7 +751,26 @@ class ArithmeticOperation(BinaryOperator):
     def typeCheck(self):  # code duplication
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
             return self.build_error()
+    
+    
+    def code_gen(self, program, line):
+        opCode_dict = {'+' : 'ADD', '-' : 'SUB', '*' : 'MUL', '/' : 'DIV'}
+        
+        left, right = super().get_values()
 
+        # Generate the code for the left and right-hand sides of the addition
+        # (also updating the 'place' values for both)
+        program = left.code_gen(program, line) + right.code_gen(program, line)
+        # Get the next open place for me to save the result of the addition
+        self.place = get_open_place()
+
+        # Load the values for the left and right sides into registers 0 and 1,
+        # compute the sum, and save to self.place
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             opCode_dict[self.operatorType] +' 0,0,1', # Add registers 0 and 1, saving the result in register 0
+                             'ST 0,' + str(self.place) + '(6)']
+        return program
 
 # -- # Binary Operators: 
 class LessThanNode(BooleanComparison):
@@ -740,48 +800,12 @@ class PlusNode(ArithmeticOperation):
         self.operatorType = "+"
         self.outputType = "integer"
 
-    def code_gen(self, program, line):
-        left, right = super().get_values()
-
-        # Generate the code for the left and right-hand sides of the addition
-        # (also updating the 'place' values for both)
-        program = left.code_gen(program, line) + right.code_gen(program, line)
-
-        # Get the next open place for me to save the result of the addition
-        self.place = get_open_place()
-
-        # Load the values for the left and right sides into registers 0 and 1,
-        # compute the sum, and save to self.place
-        program = program + ['LD 0,' + str(left.place) + '(6)',
-                             'LD 1,' + str(right.place) + '(6)',
-                             'ADD 0,0,1', # Add registers 0 and 1, saving the result in register 0
-                             'ST 0,' + str(self.place) + '(6)']
-        return program
-
 
 class MinusNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "-"
         self.outputType = "integer"
-
-    def code_gen(self, program, line):
-        left, right = super().get_values()
-
-        # Generate the code for the left and right-hand sides of the addition
-        # (also updating the 'place' values for both)
-        program = left.code_gen(program, line) + right.code_gen(program, line)
-
-        # Get the next open place for me to save the result of the addition
-        self.place = get_open_place()
-
-        # Load the values for the left and right sides into registers 0 and 1,
-        # compute the difference, and save to self.place
-        program = program + ['LD 0,' + str(left.place) + '(6)',
-                             'LD 1,' + str(right.place) + '(6)',
-                             'SUB 0,0,1', # SUB registers 0 and 1, saving the result in register 0
-                             'ST 0,' + str(self.place) + '(6)']
-        return program
 
 
 class AndNode(BooleanConnective):
@@ -790,18 +814,12 @@ class AndNode(BooleanConnective):
         self.operatorType = "and"
         self.outputType = "boolean"
 
-    def code_gen(self, line):
-        pass
-
 
 class MultiplyNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
         ArithmeticOperation.__init__(self, leftOperand, rightOperand)
         self.operatorType = "*"
         self.outputType = "integer"
-
-    def code_gen(self, line):
-        pass
 
 
 class DivisionNode(ArithmeticOperation):
@@ -810,5 +828,3 @@ class DivisionNode(ArithmeticOperation):
         self.operatorType = "/"
         self.outputType = "integer"
 
-    def code_gen(self, line):
-        pass 
