@@ -692,11 +692,9 @@ class NegationNode(UnaryOperator):
         print("line num, line")
         print(self.information)
         
-        #perhaps put this in typeCheck()
-        '''if(type(self.value) != NumberLiteralNode):
-            raise ValueError("NegationNode syntax error")'''
-         
         program = self.value.code_gen(program, line)#descend to a boolean literal
+        
+        #the following block rebuilds the integer within the LDC line of program
         firstLineCount = 6
         newFirstLine = str()
         if(program[0][firstLineCount] == '-'):
@@ -821,6 +819,30 @@ class OrNode(BooleanConnective):
         BooleanConnective.__init__(self, leftOperand, rightOperand)
         self.operatorType = "or"
         self.outputType = "boolean"
+        
+    def code_gen(self, program, line):
+        pass
+        left, right = super().get_values()
+        
+        program = left.code_gen(program, line) + right.code_gen(program, line)
+        
+        self.place = get_open_place()
+        
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             'JNE 0',
+                             'JNE 1',
+                             'LDC 0,0(0)'
+                             'ST 0,' + str(self.place) + '(6)',
+                             'LDA',
+                             'LDC 0,1(0)',
+                             'ST 0,' + str(self.place) + '(6)']
+        
+        #place the sides
+        #check if at least one of the sides is 1
+        #if so, jump to a store command of 1. carry on to end
+        #if not, store a zero and jump to end
+        
 
 
 class PlusNode(ArithmeticOperation):
