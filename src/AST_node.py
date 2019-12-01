@@ -666,17 +666,13 @@ class NotNode(UnaryOperator):
         program = self.value.code_gen(program, line)
         
         currentBool = int(program[0][6])
-        print("CURRENT BOOL!!!")
-        print(currentBool)
+        
         if currentBool == 0 :
             notBool = 1
         else:
             notBool = 0
             
-
-        program[0] = 'LDC 0,' + str(notBool) + '(0) : NotNode value'
-        '''program = ['LDC 0,' + opCode_dict[str(self.value)] + '(0) : NotNode value',
-                   'ST 0,' + str(self.place) + '(6) : NotNode storage']'''
+        program[0] = 'LDC 0,' + str(notBool) + '(0) : NotNode value, derived from boolean literal node'
         
         return program
 
@@ -691,16 +687,34 @@ class NegationNode(UnaryOperator):
             return self.build_error()
         
     def code_gen(self, program, line):
-        pass
         line += 1
         print("code gen inside negation node")
         print("line num, line")
+        print(self.information)
         
+        #perhaps put this in typeCheck()
+        '''if(type(self.value) != NumberLiteralNode):
+            raise ValueError("NegationNode syntax error")'''
+         
+        program = self.value.code_gen(program, line)#descend to a boolean literal
+        firstLineCount = 6
+        newFirstLine = str()
+        if(program[0][firstLineCount] == '-'):
+            firstLineCount += 1
+        else:
+            newFirstLine = "-"
+        while True:
+            if program[0][firstLineCount] == '(':
+                break
+            newFirstLine += program[0][firstLineCount]
+            firstLineCount += 1
+        while True:
+            newFirstLine += program[0][firstLineCount]
+            if program[0][firstLineCount] == ')':
+                break
+            firstLineCount += 1
         
-        
-        self.place = get_open_place()
-        program = ['LDC 0,' + str(0 - int(str(self.value))) + '(0) : NegationNode value',
-                   'ST 0,' + str(self.place) + '(6) : NegationNode storage']
+        program[0] = program[0][0:6] + newFirstLine + " : NegationNode value, derived from number literal node"
         
         return program
 
