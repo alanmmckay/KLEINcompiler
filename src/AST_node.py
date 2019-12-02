@@ -814,7 +814,17 @@ class LessThanNode(BooleanComparison):
         
         self.place = get_open_place()
         
-        program = program + []
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             #subtract r0 by r1. If the restult is less than zero, then r0 less than r1
+                             'SUB 2,1,0',
+                             'JLT 2,3(7)',#if r0 is les than r1, then jump to line x,
+                             'LDC 0,0(5)',#load 0 into register 0; this test is false
+                             'ST 0,' + str(self.place) + '(6)',
+                             'LDA 7,2(7)',#jump past else statement
+                             'LDC 0,1(5)',#line x: load 1 into register 0; this test is true
+                             'ST 0,' + str(self.place) + '(6)'
+                             ]
         return program
 
 
@@ -835,11 +845,11 @@ class EqualToNode(BooleanComparison):
                              'LD 1,' + str(right.place) + '(6)',
                              #subtract r0 by r1. If the result is not zero, then they are not equal
                              'SUB 2,0,1',
-                             'JNE 2, 3(7)', #if not equal to zero, go to line x
-                             'LDC 0,1(5)', #load 1 into register 0; above test is true
+                             'JNE 2, 3(7)',#if not equal to zero, go to line x
+                             'LDC 0,1(5)', #load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7)',#jump past else statement
-                             'LDC 0,0(5)', #line x: load 0 into register 0
+                             'LDC 0,0(5)', #line x: load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)']
         
         return program
@@ -862,10 +872,10 @@ class OrNode(BooleanConnective):
                              'LD 1,' + str(right.place) + '(6)',
                              'JNE 0,4(7)',#if left side is not zero, go to line x
                              'JNE 1,3(7)',#if right side is not zero, go to line x
-                             'LDC 0,0(5)',#load 0 into register 0; above condition is false
+                             'LDC 0,0(5)',#load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)',
-                             'LDA 7,2(7)',#jump ahead two lines
-                             'LDC 0,1(5)',#line x: load 1 into register 0
+                             'LDA 7,2(7)',#jump past else statement
+                             'LDC 0,1(5)',#line x: load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)']
         return program
         
@@ -899,10 +909,10 @@ class AndNode(BooleanConnective):
                              'LD 1,' + str(right.place) + '(6)',
                              'JEQ 0,4(7)',#if left is equal to 0, go to line x
                              'JEQ 1,3(7)',#if right is equal to 0, go to line x
-                             'LDC 0,1(5)',#load 1 into register 0; above condition is true
+                             'LDC 0,1(5)',#load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)',
-                             'LDA 7,2(7)',#jump ahead two lines
-                             'LDC 0,0(5)',#line x: load 0 into register 0
+                             'LDA 7,2(7)',#jump past else statement
+                             'LDC 0,0(5)',#line x: load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)']
         return program
 
