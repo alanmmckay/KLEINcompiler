@@ -210,9 +210,9 @@ class ProgramNode(ASTnode):
         program = []
         program += self.definitionsNode.code_gen(line)
 
-        front_matter = ['LDC 6,' + str(len(program) + 6) + '(0)',
-                        'LDC 1,2(0)',
-                        'ADD 1,7,1',
+        front_matter = ['LDC 6,' + str(len(program) + 6) + '(5)',
+                        'LDC 1,2(5)',#r1 is now set to 2
+                        'ADD 1,7,1',#r1 is now set to 6
                         'ST 1,0(6)',
                         'LDA 7,' + str(function_table['main']['stack_position'] + 2) + '(7)',
                         'OUT 0,0,0',
@@ -419,9 +419,10 @@ class ExpressionNode(ASTnode):
     def code_gen(self, program, line):
         print("code gen in expression node")
         print()
-
+        
         program = self.expression.code_gen(program, line)
-
+        self.place = self.expression.place
+        
         print("code gen in expression node return")
         print()
         return program#, line
@@ -591,7 +592,7 @@ class NumberLiteralNode(ValueNode):
 
         # Load the constant value into register 0, and then save this
         # register to the temporary variable location 'place'
-        program = ['LDC 0,' + str(self.value) + '(0) : NumberLiteralNode constant',
+        program = ['LDC 0,' + str(self.value) + '(5) : NumberLiteralNode constant',
                    'ST 0,' + str(self.place) + '(6) : NumberLiteralNode storage']
         # program tm code
         return program#, line
@@ -610,7 +611,7 @@ class BooleanLiteralNode(ValueNode):
         print(self.information)
         
         self.place = get_open_place( )
-        program = ['LDC 0,' + opCode_dict[self.value] + '(0) : BooleanLiteralNode value', 
+        program = ['LDC 0,' + opCode_dict[self.value] + '(5) : BooleanLiteralNode value', 
                    'ST 0,' + str(self.place) + '(6) : BooleanLiteralNode storage']
         
         return program
@@ -651,20 +652,28 @@ class NotNode(UnaryOperator):
         UnaryOperator.__init__(self, operand)
         self.operatorType = "not"
         self.outputType = "boolean"
+        print(self.information)
 
     def typeCheck(self):
         if self.value.outputType != "boolean":
             return self.build_error()
         
     def code_gen(self, program, line):
-        opCode_dict = {"true" : "0", "false" : "1"}
         line += 1
         print("code gen inside not node")
         print("line num ", line)
-        self.place = get_open_place()
-
-        program = ['LDC 0,' + opCode_dict[str(self.value)] + '(0) : NotNode value',
-                   'ST 0,' + str(self.place) + '(6) : NotNode storage']
+        
+        #run codegen on whatever expressions exist within this node
+        program = self.value.code_gen(program, line)
+        
+        currentBool = int(program[0][6])
+        
+        if currentBool == 0 :
+            notBool = 1
+        else:
+            notBool = 0
+            
+        program[0] = 'LDC 0,' + str(notBool) + '(5) : NotNode value, derived from boolean literal node'
         
         return program
 
@@ -682,10 +691,29 @@ class NegationNode(UnaryOperator):
         line += 1
         print("code gen inside negation node")
         print("line num, line")
+        print(self.information)
         
-        self.place = get_open_place()
-        program = ['LDC 0,' + str(0 - self.value.get_value()) + '(0) : NegationNode value',
-                   'ST 0,' + str(self.place) + '(6) : NegationNode storage']
+        program = self.value.code_gen(program, line)#descend to a boolean literal
+        
+        #the following block rebuilds the integer within the LDC line of program
+        firstLineCount = 6
+        newFirstLine = str()
+        if(program[0][firstLineCount] == '-'):
+            firstLineCount += 1
+        else:
+            newFirstLine = "-"
+        while True:
+            if program[0][firstLineCount] == '(':
+                break
+            newFirstLine += program[0][firstLineCount]
+            firstLineCount += 1
+        while True:
+            newFirstLine += program[0][firstLineCount]
+            if program[0][firstLineCount] == ')':
+                break
+            firstLineCount += 1
+        
+        program[0] = program[0][0:6] + newFirstLine + " : NegationNode value, derived from number literal node"
         
         return program
 
@@ -756,7 +784,7 @@ class ArithmeticOperation(BinaryOperator):
     def code_gen(self, program, line):
         opCode_dict = {'+' : 'ADD', '-' : 'SUB', '*' : 'MUL', '/' : 'DIV'}
         
-        left, right = super().get_values()
+        right, left = super().get_values()
 
         # Generate the code for the left and right-hand sides of the addition
         # (also updating the 'place' values for both)
@@ -766,8 +794,8 @@ class ArithmeticOperation(BinaryOperator):
 
         # Load the values for the left and right sides into registers 0 and 1,
         # compute the sum, and save to self.place
-        program = program + ['LD 0,' + str(left.place) + '(6)',
-                             'LD 1,' + str(right.place) + '(6)',
+        program = program + ['LD 0,' + str(left.place) + '(6) : left operand load into register',
+                             'LD 1,' + str(right.place) + '(6) : right operand load into register',
                              opCode_dict[self.operatorType] +' 0,0,1', # Add registers 0 and 1, saving the result in register 0
                              'ST 0,' + str(self.place) + '(6)']
         return program
@@ -778,6 +806,26 @@ class LessThanNode(BooleanComparison):
         BooleanComparison.__init__(self, leftOperand, rightOperand)
         self.operatorType = "<"
         self.outputType = "boolean"
+        
+    def code_gen(self, program, line):
+        right, left = super().get_values()
+        
+        program = left.code_gen(program,line) + right.code_gen(program, line)
+        
+        self.place = get_open_place()
+        
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             #subtract r0 by r1. If the restult is less than zero, then r0 less than r1
+                             'SUB 2,1,0',
+                             'JLT 2,3(7)',#if r0 is les than r1, then jump to line x,
+                             'LDC 0,0(5)',#load 0 into register 0; this test is false
+                             'ST 0,' + str(self.place) + '(6)',
+                             'LDA 7,2(7)',#jump past else statement
+                             'LDC 0,1(5)',#line x: load 1 into register 0; this test is true
+                             'ST 0,' + str(self.place) + '(6)'
+                             ]
+        return program
 
 
 class EqualToNode(BooleanComparison):
@@ -785,6 +833,26 @@ class EqualToNode(BooleanComparison):
         BooleanComparison.__init__(self, leftOperand, rightOperand)
         self.operatorType = "="
         self.outputType = "boolean"
+        
+    def code_gen(self, program, line):
+        right, left = super().get_values()
+        
+        program = left.code_gen(program,line) + right.code_gen(program, line)
+        
+        self.place = get_open_place()
+        
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             #subtract r0 by r1. If the result is not zero, then they are not equal
+                             'SUB 2,0,1',
+                             'JNE 2, 3(7)',#if not equal to zero, go to line x
+                             'LDC 0,1(5)', #load 1 into register 0; this test is true
+                             'ST 0,' + str(self.place) + '(6)',
+                             'LDA 7,2(7)',#jump past else statement
+                             'LDC 0,0(5)', #line x: load 0 into register 0; this test is false
+                             'ST 0,' + str(self.place) + '(6)']
+        
+        return program
 
 
 class OrNode(BooleanConnective):
@@ -792,7 +860,25 @@ class OrNode(BooleanConnective):
         BooleanConnective.__init__(self, leftOperand, rightOperand)
         self.operatorType = "or"
         self.outputType = "boolean"
-
+        
+    def code_gen(self, program, line):
+        right, left = super().get_values()
+        
+        program = left.code_gen(program, line) + right.code_gen(program, line)
+        
+        self.place = get_open_place()
+        
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             'JNE 0,4(7)',#if left side is not zero, go to line x
+                             'JNE 1,3(7)',#if right side is not zero, go to line x
+                             'LDC 0,0(5)',#load 0 into register 0; this test is false
+                             'ST 0,' + str(self.place) + '(6)',
+                             'LDA 7,2(7)',#jump past else statement
+                             'LDC 0,1(5)',#line x: load 1 into register 0; this test is true
+                             'ST 0,' + str(self.place) + '(6)']
+        return program
+        
 
 class PlusNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
@@ -813,6 +899,22 @@ class AndNode(BooleanConnective):
         BooleanConnective.__init__(self, leftOperand, rightOperand)
         self.operatorType = "and"
         self.outputType = "boolean"
+        
+    def code_gen(self,program,line):
+        right, left = super().get_values()
+        program = left.code_gen(program,line) + right.code_gen(program,line)
+        self.place = get_open_place()
+        
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             'JEQ 0,4(7)',#if left is equal to 0, go to line x
+                             'JEQ 1,3(7)',#if right is equal to 0, go to line x
+                             'LDC 0,1(5)',#load 1 into register 0; this test is true
+                             'ST 0,' + str(self.place) + '(6)',
+                             'LDA 7,2(7)',#jump past else statement
+                             'LDC 0,0(5)',#line x: load 0 into register 0; this test is false
+                             'ST 0,' + str(self.place) + '(6)']
+        return program
 
 
 class MultiplyNode(ArithmeticOperation):
