@@ -806,6 +806,16 @@ class LessThanNode(BooleanComparison):
         BooleanComparison.__init__(self, leftOperand, rightOperand)
         self.operatorType = "<"
         self.outputType = "boolean"
+        
+    def code_gen(self, program, line):
+        right, left = super().get_values()
+        
+        program = left.code_gen(program,line) + right.code_gen(program, line)
+        
+        self.place = get_open_place()
+        
+        program = program + []
+        return program
 
 
 class EqualToNode(BooleanComparison):
@@ -813,6 +823,26 @@ class EqualToNode(BooleanComparison):
         BooleanComparison.__init__(self, leftOperand, rightOperand)
         self.operatorType = "="
         self.outputType = "boolean"
+        
+    def code_gen(self, program, line):
+        right, left = super().get_values()
+        
+        program = left.code_gen(program,line) + right.code_gen(program, line)
+        
+        self.place = get_open_place()
+        
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             #subtract r0 by r1. If the result is not zero, then they are not equal
+                             'SUB 2,0,1',
+                             'JNE 2, 3(7)', #if not equal to zero, go to line x
+                             'LDC 0,1(5)', #load 1 into register 0; above test is true
+                             'ST 0,' + str(self.place) + '(6)',
+                             'LDA 7,2(7)',#jump past else statement
+                             'LDC 0,0(5)', #line x: load 0 into register 0
+                             'ST 0,' + str(self.place) + '(6)']
+        
+        return program
 
 
 class OrNode(BooleanConnective):
@@ -837,7 +867,6 @@ class OrNode(BooleanConnective):
                              'LDA 7,2(7)',#jump ahead two lines
                              'LDC 0,1(5)',#line x: load 1 into register 0
                              'ST 0,' + str(self.place) + '(6)']
-        
         return program
         
 
