@@ -829,12 +829,12 @@ class OrNode(BooleanConnective):
         
         program = program + ['LD 0,' + str(left.place) + '(6)',
                              'LD 1,' + str(right.place) + '(6)',
-                             'JNE 0,5(7)',
-                             'JNE 1,4(7)',
-                             'LDC 0,0(5)'
+                             'JNE 0,4(7)',#if left side is not zero, go to line x
+                             'JNE 1,3(7)',#if right side is not zero, go to line x
+                             'LDC 0,0(5)',#load 0 into register 0; above condition is false
                              'ST 0,' + str(self.place) + '(6)',
-                             'LDA 7,2(7)',
-                             'LDC 0,1(5)',
+                             'LDA 7,2(7)',#jump ahead two lines
+                             'LDC 0,1(5)',#line x: load 1 into register 0
                              'ST 0,' + str(self.place) + '(6)']
         
         return program
@@ -859,6 +859,22 @@ class AndNode(BooleanConnective):
         BooleanConnective.__init__(self, leftOperand, rightOperand)
         self.operatorType = "and"
         self.outputType = "boolean"
+        
+    def code_gen(self,program,line):
+        left,right = super().get_values()
+        program = left.code_gen(program,line) + right.code_gen(program,line)
+        self.place = get_open_place()
+        
+        program = program + ['LD 0,' + str(left.place) + '(6)',
+                             'LD 1,' + str(right.place) + '(6)',
+                             'JEQ 0,4(7)',#if left is equal to 0, go to line x
+                             'JEQ 1,3(7)',#if right is equal to 0, go to line x
+                             'LDC 0,1(5)',#load 1 into register 0; above condition is true
+                             'ST 0,' + str(self.place) + '(6)',
+                             'LDA 7,2(7)',#jump ahead two lines
+                             'LDC 0,0(5)',#line x: load 0 into register 0
+                             'ST 0,' + str(self.place) + '(6)']
+        return program
 
 
 class MultiplyNode(ArithmeticOperation):
