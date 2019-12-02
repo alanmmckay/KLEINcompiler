@@ -531,6 +531,42 @@ class IfNode(ASTnode):
             msg = msg.format()
             return msg
 
+    def code_gen(self, program, line):
+    
+        #An if statement is comprised of a conditional, then clause, and an else clause.
+        condition_code = self.condition.code_gen(program,line)
+        then_code = self.expr1.code_gen(program,line)
+        else_code = self.expr2.code_gen(program,line)
+        #add these to program where appropriate
+        
+        self.place = get_open_place()
+        
+        #evaluate the condition:
+        program = condition_code
+        
+        #decide what to do based on conditional result
+            #if the result is 1, execute else_code
+            
+        else_start = str(len(then_code)+1)
+        program = program + ['LD 0,' + str(self.condition.place) + '(6)',
+                             'JEQ 0,'+else_start+'(7) : else start']#if r0 is not zero, then jump to line x;
+                             #line x might need to be dynamically generated...
+                             #perhaps count the amount of lines that exist in then_code and else_code
+        
+        #execute the then clause
+        program = program + then_code
+        
+        #jump to end of if statement
+        else_end = str(len(else_code))
+        program = program + ['LDA 7,'+else_end+'(7) : else end']
+        
+        #execute the else clause
+        program = program + else_code
+        
+        #store the result of if statement
+        program = program + ['ST 0,' + str(self.place) + '(6)']
+                             
+        return program
 
 # --- Expressions have values... --- #
 
@@ -695,6 +731,8 @@ class NegationNode(UnaryOperator):
         
         program = self.value.code_gen(program, line)#descend to a boolean literal
         
+        self.place = self.value.place
+        
         #the following block rebuilds the integer within the LDC line of program
         firstLineCount = 6
         newFirstLine = str()
@@ -818,7 +856,7 @@ class LessThanNode(BooleanComparison):
                              'LD 1,' + str(right.place) + '(6)',
                              #subtract r0 by r1. If the restult is less than zero, then r0 less than r1
                              'SUB 2,1,0',
-                             'JLT 2,3(7)',#if r0 is les than r1, then jump to line x,
+                             'JLT 2,3(7)',#if r0 is less than r1, then jump to line x,
                              'LDC 0,0(5)',#load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7)',#jump past else statement
