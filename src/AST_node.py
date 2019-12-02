@@ -419,8 +419,9 @@ class ExpressionNode(ASTnode):
     def code_gen(self, program, line):
         print("code gen in expression node")
         print()
-
+        
         program = self.expression.code_gen(program, line)
+        self.place = self.expression.place
         
         print("code gen in expression node return")
         print()
@@ -783,7 +784,7 @@ class ArithmeticOperation(BinaryOperator):
     def code_gen(self, program, line):
         opCode_dict = {'+' : 'ADD', '-' : 'SUB', '*' : 'MUL', '/' : 'DIV'}
         
-        left, right = super().get_values()
+        right, left = super().get_values()
 
         # Generate the code for the left and right-hand sides of the addition
         # (also updating the 'place' values for both)
@@ -793,8 +794,8 @@ class ArithmeticOperation(BinaryOperator):
 
         # Load the values for the left and right sides into registers 0 and 1,
         # compute the sum, and save to self.place
-        program = program + ['LD 0,' + str(left.place) + '(6)',
-                             'LD 1,' + str(right.place) + '(6)',
+        program = program + ['LD 0,' + str(left.place) + '(6) : left operand load into register',
+                             'LD 1,' + str(right.place) + '(6) : right operand load into register',
                              opCode_dict[self.operatorType] +' 0,0,1', # Add registers 0 and 1, saving the result in register 0
                              'ST 0,' + str(self.place) + '(6)']
         return program
@@ -821,7 +822,7 @@ class OrNode(BooleanConnective):
         self.outputType = "boolean"
         
     def code_gen(self, program, line):
-        left, right = super().get_values()
+        right, left = super().get_values()
         
         program = left.code_gen(program, line) + right.code_gen(program, line)
         
@@ -861,7 +862,7 @@ class AndNode(BooleanConnective):
         self.outputType = "boolean"
         
     def code_gen(self,program,line):
-        left,right = super().get_values()
+        right, left = super().get_values()
         program = left.code_gen(program,line) + right.code_gen(program,line)
         self.place = get_open_place()
         
