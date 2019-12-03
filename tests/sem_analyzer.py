@@ -11,12 +11,23 @@ FILE_PATH = argv[1]
 FILE_PATH = FILE_PATH.strip("\r")
 with open(FILE_PATH, "r") as klein:
     klein_program = klein.read()
-print("------------------------------------")
-print("| This is not close to finished!    |")
-print("| But our ast nodes work correctly! |")
-print("------------------------------------")
-print("""         \   ^__^
-          \  (oo)\_______
-             (__)\       )\/
-                 ||----w | \/
-                 ||     ||""")
+
+# run program through scanner
+s = Scanner(klein_program)
+
+# run s through parser
+p = Parser(s)
+
+result = p.parse()
+
+if result:
+    print("Program is valid")
+
+    print("------------------------------------")
+    print("|          Yep it works!           |")
+    print("------------------------------------")
+    print("""         \   ^__^
+              \  (oo)\_______
+                 (__)\       )\/
+                     ||----w | \/
+                     ||     ||""")
