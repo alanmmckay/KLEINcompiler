@@ -310,10 +310,17 @@ class FunctionNode(ASTnode):
         # INSERT TM STATEMENTS TO SAVE CURRENT REGISTER VALUES AND THEN MOVE
         # THE STACK POINTER
 
+        
+        # --- assign address locations for formals here[?] ---#
+            #for each formal in formals:
+                #generate an address location. Probably store zero there.
+                #use temp vars to determine where
+
+
         # frame_size represents the size of the stack frame, which might vary for each function
         # (1 space for return address, 1 for return value, 6 for register savings, one for each argument)
         frame_size = 10 + len(self.formals.get_formals())
-
+        
         # Create a new starting point for temporary variables
         temp_vars.append(frame_size)
 
@@ -343,8 +350,9 @@ class FormalsNode(ASTnode):
     def __init__(self, parameters):
         ASTnode.__init__(self)
         self.formals = []
+        #inserting a set of tuples: (identifierNode, typeNode)
         while len(parameters) > 0:
-            push(top(parameters), self.formals)  # this is adding a set of tuples: (identifierNode, typeNode)
+            push(top(parameters), self.formals)
             pop(parameters)  # perhaps change this!!
         self.information = self.formals
 
@@ -352,7 +360,7 @@ class FormalsNode(ASTnode):
         self.returnString = " ("
         for pair in self.formals:
             self.returnString += str(pair[0]) + " : " + str(pair[1])
-            if pair != self.formals[-1]:  # !!! this could be a problem!
+            if pair != self.formals[-1]:# !!! this could be a problem!
                 self.returnString += ", "
         self.returnString += ")"
         return self.returnString
@@ -458,6 +466,19 @@ class FunctionCallNode(ASTnode):
             msg = "Function call {} is undefined."
             msg = msg.format(self.identifierNode.get_value())
             return msg
+        
+    def code_gen(self):
+        pass
+        self.place = get_open_place()
+        
+        #need to store the parameters at a location. This location needs to be at the same location as the function declaration's paramaters.
+            #it is important to remember that a function_table has already been generated. This houses information needed to know about how much arguments a function expects
+                #function_table[functionName]['functionNode'].get_formals()[i][0].get_value() returns the name of the formal
+                    #
+                #!!!! may have a logical error where the compiler accepts formals of the same name for a function declaration
+                
+        #I think the compiler thus far assigns any immediate return to register 0.
+        
 #end FunctionCallNode
 
 
