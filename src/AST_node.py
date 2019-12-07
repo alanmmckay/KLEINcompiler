@@ -246,7 +246,7 @@ class ProgramNode(ASTnode):
                 # ... and replace with a 'load-constant' to put the address of
                 #     the called function into the PC (register 7)
                 function_address = function_table[instruction.split()[1]]['function_address']
-                program.insert( index, 'LDC 7,' + str(function_address) + '(000)')
+                program.insert( index, 'LDC 7,' + str(function_address) + '(000) : '+instruction.split()[1]+' FUNCTION-CALL')
 
         return program
 #end ProgramNode
@@ -350,21 +350,21 @@ class FunctionNode(ASTnode):
         # frame_size represents the size of the stack frame, which might vary for each function
         # (1 space for return address, 1 for stack pointer, 6 for register savings,
         # one for each argument)
-        frame_size = 9 + len(self.formals.get_formals())
+        frame_size = 3 + len(self.formals.get_formals())
 
         # Create a new starting point for temporary variables
         temp_vars.append(frame_size)
 
         # Save the registers to the appropriate positions in the stack frame
-        for register_num in range(1,7):
+        '''for register_num in range(1,7):
             # move the given register to (3 + r#) past current top of stack +3 is because 1st return addr, return value, have to jump to 3rd thing
-            program.append( 'ST ' + str(register_num) + ',' + str(2 + register_num) + '(6) : '+current_function+' FunctionNode store current registers')
+            program.append( 'ST ' + str(register_num) + ',' + str(2 + register_num) + '(6) : '+current_function+' FunctionNode store current registers')'''
 
         program += self.bodyNode.code_gen(program, line)
 
         # Restore the registers (register 6 last, of course)
-        for register_num in range(1,7):
-            program.append( 'LD ' + str(register_num) + ',' + str(2 + register_num) + '(6) : '+current_function+' FunctionNode restore old registers')
+        '''for register_num in range(1,7):
+            program.append( 'LD ' + str(register_num) + ',' + str(2 + register_num) + '(6) : '+current_function+' FunctionNode restore old registers')'''
 
         program.append('LD 7,0(6) : '+current_function+' FunctionNode line return')
 
@@ -514,7 +514,7 @@ class FunctionCallNode(ASTnode):
         # copy them into the stack frame of the function we are going to call
         for index, actual in enumerate(self.actualsNode.actuals):
             program.append( 'LD 5,' + str(actual.place) + '(6) ; load actual #' + str(index) )
-            program.append( 'ST 5,' + str(self.place + 9 + index) + '(6)' )
+            program.append( 'ST 5,' + str(self.place + 3 + index) + '(6)' )
 
         # (Compute and) Copy the return address into the new stack frame
         program.append( 'LDC 1,4(000)' )
@@ -543,16 +543,7 @@ class FunctionCallNode(ASTnode):
 
         return program
 
-        #pass
-        #self.place = get_open_place()
-
-        #need to store the parameters at a location. This location needs to be at the same location as the function declaration's paramaters.
-            #it is important to remember that a function_table has already been generated. This houses information needed to know about how much arguments a function expects
-                #function_table[functionName]['functionNode'].get_formals()[i][0].get_value() returns the name of the formal
-                    #
-                #!!!! may have a logical error where the compiler accepts formals of the same name for a function declaration
-
-        #I think the compiler thus far assigns any immediate return to register 0.
+        #!!!! may have a logical error where the compiler accepts formals of the same name for a function declaration
 
 #end FunctionCallNode
 
@@ -687,7 +678,7 @@ class IdentifierNode(ValueNode):
             return msg
 
     def code_gen(self,a,b):
-        self.place = 9 + self.formal_position
+        self.place = 3 + self.formal_position
         return []
 #end IdentifierNode
 
