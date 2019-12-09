@@ -1,17 +1,6 @@
 import sys
 import os
 
-
-'''
-Took out the symbol_table dictionary. I had a function_table dictionary in place
-that holds all the information pertaining to a function.
-
-I merged the symbol table's responsibility in to the index of stack_position
-within the function_table. That is, to retreive the same data you need to access
-function_table[functionName]['stack_position']
-'''
-
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.errors import SemanticError
 from src.stack_operations import top, pop, push, push_rule
@@ -21,6 +10,7 @@ function_record = []
 # that is currently being processed
 
 function_table = {}
+#function_table[functionName] = {"functionNode":FunctionNode object, "stack_position": position of function in IMEM.}
 
 #temp_vars stores available dmem addresses
 temp_vars = [0]
@@ -205,7 +195,6 @@ class ProgramNode(ASTnode):
         ASTnode.__init__(self)
         self.definitionsNode = functionDefinitions
         push(self.definitionsNode,self.information)
-        #set up function_table here?
 
 
     def __str__(self):
@@ -218,34 +207,30 @@ class ProgramNode(ASTnode):
         pass
 
     def code_gen(self, line):
-        print("code gen in program node")
         program = []
 
-
+        #This block rebuilds the argument list in DMEM to factor the existence
+        #of a return address and return value within a regular function
+            #Basically: an adhoc implementation to allow TM parameters    
         r6_address = len(function_table['main']['functionNode'].get_formals())
-        #this will factor the parameters that already exist in DMEM
-        
-        
         main_arguments = []
         index = 1
         while index < r6_address + 1:
             main_arguments = main_arguments + ['LD 1,'+str(index)+'(0)', 'ST 1,'+str(index+3)+'(6)']
             index+=1
             
-        print(main_arguments)
+        #perhaps replace index - 1 with r6_address
         program += self.definitionsNode.code_gen(7 + ((index - 1)*2))
 
         front_matter = main_arguments + ['LDC 6,1(000)',#set position of top
-                        'LDC 1,2(000)',#r1 is now set to 2
-                        'ADD 1,7,1',#r1 is now set to 6
-                        'ST 1,0(6)',
+                        'LDC 1,2(000)',
+                        'ADD 1,7,1',
+                        'ST 1,0(6)',#store return address
                         'LDA 7,' + str(function_table['main']['stack_position'] + 2) + '(7)',
                         'OUT 0,0,0',
                         'HALT 0,0,0']
 
         program = front_matter + program
-        print("code gen in program node return")
-        print()
 
         # Second pass to find function calls and insert the address of the
         # function (since we might now know this address when the function is
@@ -259,7 +244,7 @@ class ProgramNode(ASTnode):
                 #     the called function into the PC (register 7)
                 function_address = function_table[instruction.split()[1]]['function_address']
                 program.insert( index, 'LDC 7,' + str(function_address) + '(000) : '+instruction.split()[1]+' FUNCTION-CALL')
-
+                
         return program
 #end ProgramNode
 
@@ -294,18 +279,12 @@ class DefinitionsNode(ASTnode):
             return msg
 
     def code_gen(self, line):
-        print()
-        print("code gen in def node")
-        print()
         program = []
         for function in self.functions:
             function_table[function.get_name()]["stack_position"] = len(program)
             function_table[function.get_name()]['function_address'] = len(program) + line
             program += function.code_gen(line + len(program))
-
         # Our first instruction is to set the PC to the address of the 'main' function
-        print("code gen in def node return")
-        print()
         return program
 #end DefinitionsNode
 
@@ -344,13 +323,7 @@ class FunctionNode(ASTnode):
         current_function = str(self.identifierNode)
         self.start_address = line
         program = []
-        print( 'Function', current_function, 'is at', line)
-
-        print("code gen in function node")
-        print()
-
-        # INSERT TM STATEMENTS TO SAVE CURRENT REGISTER VALUES AND THEN MOVE
-        # THE STACK POINTER
+        #print( 'Function', current_function, 'is at', line)
 
         # frame_size represents the size of the stack frame, which might vary for each function
         # (1 space for return address, 1 for stack pointer, and one for each argument)
@@ -367,8 +340,6 @@ class FunctionNode(ASTnode):
         temp_vars.pop( )
 
         # Insert an instruction which says return to the address of the caller
-        print("code gen in function node return")
-        print()
         return program
 #end FunctionNode
 
@@ -447,7 +418,7 @@ class ExpressionNode(ASTnode):
     def code_gen(self, program, line):
         program = self.expression.code_gen(program, line)
         self.place = self.expression.place
-        return program#, line
+        return program
 #end ExpressionNode
 
 
@@ -674,6 +645,10 @@ class IdentifierNode(ValueNode):
 
     def code_gen(self,a,b):
         self.place = 3 + self.formal_position
+        #identifiers will always be in an expressionnode...
+        #this is a short term fix for outputting an actual through a print statement.
+        #very ineffecient
+        return ['LD 0,'+str(self.place)+'(6) : identifier load']
         return []
 #end IdentifierNode
 
@@ -786,7 +761,13 @@ class NegationNode(UnaryOperator):
         self.place = self.value.place
 
         #---the following block rebuilds the integer within the LDC line of program---#
-        firstLineCount = 6 #"LDC x," is five characters long, start at character 6
+        if(program[0][0:3] == 'LDC'):
+            firstLineCount = 6
+            initval = 6
+        elif(program[0][0:3] == 'LD '):
+            firstLineCount = 5
+            initval = 5
+        #firstLineCount = 6 #"LDC x," is five characters long, start at character 6
         newFirstLine = str()
 
         #check to see if the number in this tm statement is already 'negated'
@@ -797,6 +778,7 @@ class NegationNode(UnaryOperator):
 
         #rebuild the number string considering the above condition
         while True:
+            print(newFirstLine)
             if program[0][firstLineCount] == '(':
                 break
             newFirstLine += program[0][firstLineCount]
@@ -809,9 +791,9 @@ class NegationNode(UnaryOperator):
             if program[0][firstLineCount] == ')':
                 break
             firstLineCount += 1
-
+            
         #insert new number string back into the program instruction
-        program[0] = program[0][0:6] + newFirstLine + " : NegationNode value, derived from number literal node"
+        program[0] = program[0][0:initval] + newFirstLine + " : NegationNode value, derived from number literal node"
         #--- end ---#
         return program
 #end NegationNode
