@@ -1,0 +1,5 @@
+function main(m : integer, n : integer):boolean
+    if m < n then
+        true
+    else
+        false

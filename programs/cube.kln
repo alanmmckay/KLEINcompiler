@@ -1,3 +1,6 @@
+function main(number : integer, n2 :integer, n3 :integer ) : integer
+   cube( number ) 
+
 function cube( n : integer ) : integer
     n * identity(n)
 
@@ -7,5 +10,3 @@ function identity( param1 : integer ) : integer
 function multiply( n : integer, m : integer ) : integer
     n * m
 
-function main( ) : integer
-   cube( 6 )

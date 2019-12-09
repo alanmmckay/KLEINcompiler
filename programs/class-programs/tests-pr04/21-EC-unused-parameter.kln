@@ -1,0 +1,6 @@
+function main(): integer
+    f(0, 1)
+
+function f(a : integer, b : integer): integer
+    a
+

@@ -1,0 +1,5 @@
+function main(number : integer, negations : integer): integer
+    if 0 < negations then
+        main( -(number), negations - 1)
+    else
+        number

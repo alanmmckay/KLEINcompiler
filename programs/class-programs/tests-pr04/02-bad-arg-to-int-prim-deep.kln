@@ -1,0 +1,2 @@
+function main() : integer
+    1 + 2 * false

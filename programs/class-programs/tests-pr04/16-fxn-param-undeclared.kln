@@ -1,0 +1,2 @@
+function main(m : integer) : integer
+    p * m

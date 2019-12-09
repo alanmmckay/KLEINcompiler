@@ -1,0 +1,2 @@
+function main(): boolean
+   if 1 then true else false

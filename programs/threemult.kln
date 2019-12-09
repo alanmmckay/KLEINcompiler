@@ -1,0 +1,3 @@
+function main(n:integer, m:integer, o:integer):integer
+    print(n)
+    --(n + m) * o

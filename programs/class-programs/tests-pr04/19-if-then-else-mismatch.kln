@@ -1,0 +1,2 @@
+function main(): integer
+    if true then 1 else false

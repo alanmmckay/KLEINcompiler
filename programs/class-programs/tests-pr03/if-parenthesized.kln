@@ -1,0 +1,4 @@
+(*-- This program should produce the same AST as a program w/o parens --*)
+
+function main(a : boolean): integer
+    1 + (if a then 42 else -1)

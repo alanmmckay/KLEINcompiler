@@ -1,0 +1,8 @@
+function main(m : integer, n : integer) : integer
+    call(m + n)
+
+function call(n : integer) : integer
+    n
+
+function call(b : boolean) : integer
+    if b then 1 else 0

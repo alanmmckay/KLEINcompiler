@@ -1,0 +1,12 @@
+function remainder(a : integer, b : integer) : integer
+      a < b then
+      a
+   else
+      remainder(a-b, b)
+
+
+function main(a : integer, b : integer) : integer
+   if b = 0 then
+      a
+   else
+      main(b, remainder(a, b))

@@ -1,0 +1,4 @@
+(*-- This program should produce the same AST as 1 _ (42|-1) --*)
+
+function main(a : boolean): integer
+    1 + if a then 42 else -1

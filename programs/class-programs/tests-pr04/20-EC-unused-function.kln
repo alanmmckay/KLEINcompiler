@@ -1,0 +1,5 @@
+function main(): integer
+    0
+
+function UseMe(): boolean
+    false

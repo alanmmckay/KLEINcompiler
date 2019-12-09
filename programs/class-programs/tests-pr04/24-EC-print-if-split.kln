@@ -1,0 +1,3 @@
+function main(): integer
+    print( if true then 1 else false )
+    1

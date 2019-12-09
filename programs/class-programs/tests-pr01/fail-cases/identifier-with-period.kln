@@ -1,0 +1,2 @@
+function main( n.i : integer ) : boolean
+  n.i - 1

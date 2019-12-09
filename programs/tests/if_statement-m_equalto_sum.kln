@@ -1,0 +1,6 @@
+function main(m : integer, n : integer, o : integer):boolean
+    if m = (n + o) then
+        true
+    else
+        false
+ 

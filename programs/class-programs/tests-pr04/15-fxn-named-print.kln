@@ -1,0 +1,7 @@
+function main(m : integer, n : integer) : integer
+    print(n + m)
+    1
+
+function print(n : integer) : integer
+    n
+

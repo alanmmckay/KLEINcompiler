@@ -1,0 +1,2 @@
+function main() : integer
+  2147483646     (* 2^31 - 2 *)

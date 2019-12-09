@@ -1,0 +1,6 @@
+function main( n : integer ) : boolean
+  negative?(n)
+
+function negative?( n : integer ) : boolean
+  n < 0
+

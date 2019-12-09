@@ -1,0 +1,6 @@
+function main(value:integer):boolean
+    printvalue(value)
+ 
+function printvalue(value:integer):boolean
+    print(value)
+    true

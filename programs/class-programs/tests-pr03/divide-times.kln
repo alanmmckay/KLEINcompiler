@@ -1,0 +1,4 @@
+(*-- This program should produce the AST for (a / b) * c --*)
+
+function main(a : integer, b : integer, c : integer): integer
+    a / b * c

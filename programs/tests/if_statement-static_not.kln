@@ -1,0 +1,6 @@
+ function main():boolean
+    if 2 < 1 then
+        not false
+    else
+        not true
+ 

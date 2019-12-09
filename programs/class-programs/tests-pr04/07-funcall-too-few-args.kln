@@ -1,0 +1,5 @@
+function mod(m : integer, n : integer) : integer
+    if m < n then m else mod(m-n, n)
+
+function main(): integer
+    mod(1)

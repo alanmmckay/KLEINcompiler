@@ -1,0 +1,5 @@
+function main(one:integer,two:integer,three:integer):boolean
+    print(one)
+    print(two)
+    print(three)
+    true

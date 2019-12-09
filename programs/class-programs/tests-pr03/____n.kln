@@ -1,0 +1,4 @@
+(*-- This program should produce a linear AST for -(-(-(- n))) --*)
+
+function main(n : integer): integer
+    ----n
