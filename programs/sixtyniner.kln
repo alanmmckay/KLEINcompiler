@@ -1,5 +1,0 @@
-function main(input : boolean, test : boolean):integer
-    if input and test then
-        69
-    else
-        96
