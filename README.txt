@@ -13,15 +13,53 @@ TinyMachine.
 
 --- Development Stages:
 
+-- CodeGenerator, Project 6:
+
+    Associated implementation files:
+    -AST_node.py
+    -code-generator.py
+    -kleinc
+    
+    Project 6 expands on the functionality of project 5. The goal is to 
+    WEcomplete what wasn't finished in project 5. The following is what was 
+    Wimplemented:
+    -Function Calls
+    -Arithmatic Operations
+        ->Addition Operation
+        ->Subtraction Operation
+        ->Division Operation
+        ->Multiplication Operation
+    -Boolean Connective Operations
+        ->And Operation
+        ->Or Operation
+    -Boolean Comparison Operations
+        ->Less Than Operation
+        ->Equal to Operation
+    -Unary Operations
+        ->Not Operation
+        ->Negation Operation
+        
+    What needs to be implemented:
+    -Grabbing arguments from the intial tm execution
+        ->The compiler does have logic that places the initial DMEM arguments 
+        into the control stack.
+    -We currently have a logical error that allows klein programs to have 
+    arguments with the same name
+    -Some better error handling could be good
+    
+    Documentation that needs to be added:
+    -A full description of our run-time stack (we are getting down to the last 
+    minute for this submission)
+    
+    New Klein Program:
+    -cube.kln
+    
 -- CodeGenerator, Project 5:
 
     Associated implementation files:
-    -print-one.kln
+    -kleinc
     -AST_node.py
     -code-generator.py
-
-    How to run:
-    ./kleinc programs/print-one.kln
     
     Code Generator Description:
     The first phase of the code generator is that it starts jumping to the main 
@@ -37,51 +75,51 @@ TinyMachine.
     - setting up 3 address code templates for each node
    
     
-    -- Type Checker, Project 4
+-- Type Checker, Project 4
 
-    Associated implementation files:
-        -kleinp
-        -src/parser.py
-        -src/AST_node.py
-        
-    How to Run:
-        -Feed a program through kleinp. It will print back node information as 
-        the AST is being built. If there is a type error, a Semantic Error will 
-        be thrown.
+Associated implementation files:
+    -kleinp
+    -src/parser.py
+    -src/AST_node.py
+    
+How to Run:
+    -Feed a program through kleinp. It will print back node information as 
+    the AST is being built. If there is a type error, a Semantic Error will 
+    be thrown.
 
-    Semantic Analyzer Description:
-        The next phase of the project is to augment the abstract syntax tree 
-        with type information. This is used to make sure a user is inputting 
-        the correct type of data for the programs to execute. We handled this 
-        by adding type checking methods to the ASTnode class within AST_node.py 
-        and made changes to a subclass's method where applicable. The type 
-        check occurs after the parser builds the abstract syntax tree, where 
-        the parser grabs the outer node off the semantic stack and calls 
-        process_node() which recursively descends into the composition of nodes,
-        calling typeCheck() when applicable.
-        
-        When a type error is found, the recursive function starts to back-track,
-        sending the error information as an error object back to the parser. If
-        the error object exists on the semantic stack when the parser tries to 
-        call process_node(), it will instead raise an exception, feeding extra 
-        information about program to it.
-        
-    What is not finished:
-        -We need to expand on error handling. As of now, the error messages are 
-        pretty slim.
-        -We need to provide more implementation files (a klein executable) and 
-        some documentation.
-        -Some code cleanup can occur. This includes implementing correct OOP 
-        design such as making sure accessors are correctly called, as opposed 
-        to directly referring to to an object's property. Some of our lines of 
-        code also need to be wrapped to allow easier viewing on smaller screen 
-        resolutions.
-            -> We have some duplicate code within AST_node.py. Note the 
-            inclusion of the list functions. There is also some ad-hoc code 
-            duplication within process_node(). This is in place to allow the
-            recursive function to back track once an error is found. The flag 
-            which causes this is the inclusion of the 'errobj' (an object class 
-            which needs to be renamed...) on the function_record list.
+Semantic Analyzer Description:
+    The next phase of the project is to augment the abstract syntax tree 
+    with type information. This is used to make sure a user is inputting 
+    the correct type of data for the programs to execute. We handled this 
+    by adding type checking methods to the ASTnode class within AST_node.py 
+    and made changes to a subclass's method where applicable. The type 
+    check occurs after the parser builds the abstract syntax tree, where 
+    the parser grabs the outer node off the semantic stack and calls 
+    process_node() which recursively descends into the composition of nodes,
+    calling typeCheck() when applicable.
+    
+    When a type error is found, the recursive function starts to back-track,
+    sending the error information as an error object back to the parser. If
+    the error object exists on the semantic stack when the parser tries to 
+    call process_node(), it will instead raise an exception, feeding extra 
+    information about program to it.
+    
+What is not finished:
+    -We need to expand on error handling. As of now, the error messages are 
+    pretty slim.
+    -We need to provide more implementation files (a klein executable) and 
+    some documentation.
+    -Some code cleanup can occur. This includes implementing correct OOP 
+    design such as making sure accessors are correctly called, as opposed 
+    to directly referring to to an object's property. Some of our lines of 
+    code also need to be wrapped to allow easier viewing on smaller screen 
+    resolutions.
+        -> We have some duplicate code within AST_node.py. Note the 
+        inclusion of the list functions. There is also some ad-hoc code 
+        duplication within process_node(). This is in place to allow the
+        recursive function to back track once an error is found. The flag 
+        which causes this is the inclusion of the 'errobj' (an object class 
+        which needs to be renamed...) on the function_record list.
 
 -- Parser, Project 3:
 
