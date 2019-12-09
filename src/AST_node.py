@@ -1,17 +1,6 @@
 import sys
 import os
 
-
-'''
-Took out the symbol_table dictionary. I had a function_table dictionary in place
-that holds all the information pertaining to a function.
-
-I merged the symbol table's responsibility in to the index of stack_position
-within the function_table. That is, to retreive the same data you need to access
-function_table[functionName]['stack_position']
-'''
-
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.errors import SemanticError
 from src.stack_operations import top, pop, push, push_rule
@@ -207,6 +196,7 @@ class ProgramNode(ASTnode):
         self.definitionsNode = functionDefinitions
         push(self.definitionsNode,self.information)
 
+
     def __str__(self):
         #Definitions.__str__() prints out the function list...
         self.returnString = "Program: \n"
@@ -254,7 +244,7 @@ class ProgramNode(ASTnode):
                 #     the called function into the PC (register 7)
                 function_address = function_table[instruction.split()[1]]['function_address']
                 program.insert( index, 'LDC 7,' + str(function_address) + '(000) : '+instruction.split()[1]+' FUNCTION-CALL')
-       
+                
         return program
 #end ProgramNode
 
@@ -294,7 +284,6 @@ class DefinitionsNode(ASTnode):
             function_table[function.get_name()]["stack_position"] = len(program)
             function_table[function.get_name()]['function_address'] = len(program) + line
             program += function.code_gen(line + len(program))
-            
         # Our first instruction is to set the PC to the address of the 'main' function
         return program
 #end DefinitionsNode
@@ -338,14 +327,13 @@ class FunctionNode(ASTnode):
 
         # frame_size represents the size of the stack frame, which might vary for each function
         # (1 space for return address, 1 for stack pointer, and one for each argument)
-
         frame_size = 3 + len(self.formals.get_formals())
 
         # Create a new starting point for temporary variables
         temp_vars.append(frame_size)
-        
+
         program += self.bodyNode.code_gen(program, line)
-  
+
         program.append('LD 7,0(6) : '+current_function+' FunctionNode line return')
 
         # Function has been generated, remove the temp var counter from the list
@@ -749,6 +737,7 @@ class NotNode(UnaryOperator):
     def code_gen(self, program, line):
         program = self.value.code_gen(program, line)
         currentBool = int(program[0][6])
+        self.place = self.value.place
         if currentBool == 0 :
             notBool = 1
         else:
@@ -790,7 +779,6 @@ class NegationNode(UnaryOperator):
 
         #rebuild the number string considering the above condition
         while True:
-            print(newFirstLine)
             if program[0][firstLineCount] == '(':
                 break
             newFirstLine += program[0][firstLineCount]
@@ -803,7 +791,7 @@ class NegationNode(UnaryOperator):
             if program[0][firstLineCount] == ')':
                 break
             firstLineCount += 1
-
+            
         #insert new number string back into the program instruction
         program[0] = program[0][0:initval] + newFirstLine + " : NegationNode value, derived from number literal node"
         #--- end ---#
@@ -870,7 +858,7 @@ class ArithmeticOperation(BinaryOperator):
 
     def code_gen(self, program, line):
         opCode_dict = {'+' : 'ADD', '-' : 'SUB', '*' : 'MUL', '/' : 'DIV'}
-        right, left = super().get_values()
+        left, right = super().get_values()
         # Generate the code for the left and right-hand sides of the addition
         # (also updating the 'place' values for both)
         program = left.code_gen(program, line) + right.code_gen(program, line)
@@ -1010,3 +998,4 @@ class DivisionNode(ArithmeticOperation):
         self.operatorType = "/"
         self.outputType = "integer"
 #end DivisionNode
+ 
