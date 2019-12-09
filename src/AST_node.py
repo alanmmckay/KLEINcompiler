@@ -1,6 +1,17 @@
 import sys
 import os
 
+
+'''
+Took out the symbol_table dictionary. I had a function_table dictionary in place
+that holds all the information pertaining to a function.
+
+I merged the symbol table's responsibility in to the index of stack_position
+within the function_table. That is, to retreive the same data you need to access
+function_table[functionName]['stack_position']
+'''
+
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.errors import SemanticError
 from src.stack_operations import top, pop, push, push_rule
@@ -195,24 +206,37 @@ class ProgramNode(ASTnode):
         self.definitionsNode = functionDefinitions
         push(self.definitionsNode,self.information)
         #set up function_table here?
-        
-    
+
+
     def __str__(self):
         #Definitions.__str__() prints out the function list...
         self.returnString = "Program: \n"
         self.returnString += self.definitionsNode.__str__()
         return self.returnString
-        
+
     def typeCheck(self):
         pass
 
     def code_gen(self, line):
         print("code gen in program node")
         program = []
-        program += self.definitionsNode.code_gen(line)
 
-        front_matter = ['LDC 6,' + str(len(program) + 6) + '(5)',
-                        'LDC 1,2(5)',#r1 is now set to 2
+
+        r6_address = len(function_table['main']['functionNode'].get_formals())
+        #this will factor the parameters that already exist in DMEM
+        
+        
+        main_arguments = []
+        index = 1
+        while index < r6_address + 1:
+            main_arguments = main_arguments + ['LD 1,'+str(index)+'(0)', 'ST 1,'+str(index+3)+'(6)']
+            index+=1
+            
+        print(main_arguments)
+        program += self.definitionsNode.code_gen(7 + ((index - 1)*2))
+
+        front_matter = main_arguments + ['LDC 6,1(000)',#set position of top
+                        'LDC 1,2(000)',#r1 is now set to 2
                         'ADD 1,7,1',#r1 is now set to 6
                         'ST 1,0(6)',
                         'LDA 7,' + str(function_table['main']['stack_position'] + 2) + '(7)',
@@ -222,6 +246,20 @@ class ProgramNode(ASTnode):
         program = front_matter + program
         print("code gen in program node return")
         print()
+
+        # Second pass to find function calls and insert the address of the
+        # function (since we might now know this address when the function is
+        # called)
+        for index, instruction in enumerate(program):
+            if 'FUNCTION-CALL' in instruction:
+                # Remove the placeholder instruction from the program...
+                program.pop( index )
+
+                # ... and replace with a 'load-constant' to put the address of
+                #     the called function into the PC (register 7)
+                function_address = function_table[instruction.split()[1]]['function_address']
+                program.insert( index, 'LDC 7,' + str(function_address) + '(000) : '+instruction.split()[1]+' FUNCTION-CALL')
+
         return program
 #end ProgramNode
 
@@ -262,7 +300,8 @@ class DefinitionsNode(ASTnode):
         program = []
         for function in self.functions:
             function_table[function.get_name()]["stack_position"] = len(program)
-            program += function.code_gen(line)
+            function_table[function.get_name()]['function_address'] = len(program) + line
+            program += function.code_gen(line + len(program))
 
         # Our first instruction is to set the PC to the address of the 'main' function
         print("code gen in def node return")
@@ -303,37 +342,24 @@ class FunctionNode(ASTnode):
 
     def code_gen(self, line):#need to clean up comments here...
         current_function = str(self.identifierNode)
+        self.start_address = line
         program = []
+        print( 'Function', current_function, 'is at', line)
+
         print("code gen in function node")
         print()
 
         # INSERT TM STATEMENTS TO SAVE CURRENT REGISTER VALUES AND THEN MOVE
         # THE STACK POINTER
 
-        
-        # --- assign address locations for formals here[?] ---#
-            #for each formal in formals:
-                #generate an address location. Probably store zero there.
-                #use temp vars to determine where
-
-
         # frame_size represents the size of the stack frame, which might vary for each function
-        # (1 space for return address, 1 for return value, 6 for register savings, one for each argument)
-        frame_size = 10 + len(self.formals.get_formals())
-        
+        # (1 space for return address, 1 for stack pointer, and one for each argument)
+        frame_size = 3 + len(self.formals.get_formals())
+
         # Create a new starting point for temporary variables
         temp_vars.append(frame_size)
 
-        # Save the registers to the appropriate positions in the stack frame
-        for register_num in range(1,7):
-            # move the given register to (3 + r#) past current top of stack +3 is because 1st return addr, return value, have to jump to 3rd thing
-            program.append( 'ST ' + str(register_num) + ',' + str(3 + register_num) + '(6) : '+current_function+' FunctionNode storage')
-
         program += self.bodyNode.code_gen(program, line)
-
-        # Restore the registers (register 6 last, of course)
-        for register_num in range(1,7):
-            program.append( 'LD ' + str(register_num) + ',' + str(3 + register_num) + '(6) : '+current_function+' FunctionNode load')
 
         program.append('LD 7,0(6) : '+current_function+' FunctionNode line return')
 
@@ -364,7 +390,7 @@ class FormalsNode(ASTnode):
                 self.returnString += ", "
         self.returnString += ")"
         return self.returnString
-    
+
     def get_formals(self):
         return self.formals
 #end FormalsNode
@@ -466,19 +492,54 @@ class FunctionCallNode(ASTnode):
             msg = "Function call {} is undefined."
             msg = msg.format(self.identifierNode.get_value())
             return msg
-        
-    def code_gen(self):
-        pass
+
+    def code_gen(self, a, b):
+        program = []
+
+        # First generate code for the expressions in the actual, saving the
+        # values as temporary spots in the stack frame
+        for actual in self.actualsNode.actuals:
+            program += actual.code_gen(a,b)
+
+        # Get the next open memory space in the stack (we will use this to find
+        # the starting point for the next activation record)
         self.place = get_open_place()
-        
-        #need to store the parameters at a location. This location needs to be at the same location as the function declaration's paramaters.
-            #it is important to remember that a function_table has already been generated. This houses information needed to know about how much arguments a function expects
-                #function_table[functionName]['functionNode'].get_formals()[i][0].get_value() returns the name of the formal
-                    #
-                #!!!! may have a logical error where the compiler accepts formals of the same name for a function declaration
-                
-        #I think the compiler thus far assigns any immediate return to register 0.
-        
+
+        # Take each of the values we calculated from the actual parameters and
+        # copy them into the stack frame of the function we are going to call
+        for index, actual in enumerate(self.actualsNode.actuals):
+            program.append( 'LD 5,' + str(actual.place) + '(6) ; load actual #' + str(index) )
+            program.append( 'ST 5,' + str(self.place + 3 + index) + '(6)' )
+
+        # (Compute and) Copy the return address into the new stack frame
+        program.append( 'LDC 1,4(000)' )
+        program.append( 'ADD 1,7,1' )
+        program.append( 'ST 1,' + str(self.place) + '(6)' )
+
+        # Save the (current) stack pointer into the next place in the activation record
+        program.append( 'ST 6,' + str(self.place + 1) + '(6)')
+
+        # Sets the (new) stack pointer to the start of the next activation record
+        program.append( 'LDA 6,' + str(self.place) + '(6)' )
+
+        # Add a placeholder instruction which says to load the address of the
+        # desired function (in IMEM) into the program counter
+        program.append( 'FUNCTION-CALL ' + self.identifierNode.get_value() )# str(function_table[self.identifierNode.get_value()]['functionNode'].start_address ))
+
+        # At this point, the function will execute and store the value it
+        # evaluates to in register 0, and then set the program counter back
+        # to "here" so I can keep executing the following instructions:
+
+        # Restore the stack pointer to its "old" value
+        program.append( 'LD 6,1(6)')
+
+        # Store the returned value to the stack frame
+        program.append( 'ST 0,' + str(self.place) + '(6)' )
+
+        return program
+
+        #!!!! may have a logical error where the compiler accepts formals of the same name for a function declaration
+
 #end FunctionCallNode
 
 
@@ -502,7 +563,7 @@ class PrintStatementNode(ASTnode):
             program.append('OUT 0,0,0 : PrintStatementNode output')
         return program
 #end PrintStatementNode
-      
+
 class IfNode(ASTnode):
     def __init__(self, ifExpression, thenExpression, elseExpression):
         ASTnode.__init__(self)
@@ -537,13 +598,13 @@ class IfNode(ASTnode):
         condition_code = self.condition.code_gen(program,line)
         then_code = self.expr1.code_gen(program,line)
         else_code = self.expr2.code_gen(program,line)
-        #add these to program where appropriate...        
-        
+        #add these to program where appropriate...
+
         self.place = get_open_place()
-        
+
         #evaluate the condition:
         program = condition_code
-        
+
         #decide what to do based on conditional result
             #if the result is 1, execute else_code
         else_start = str(len(then_code)+1)
@@ -551,27 +612,27 @@ class IfNode(ASTnode):
                              'JEQ 0,'+else_start+'(7)']#if r0 is not zero, then jump to line x;
                              #line x might need to be dynamically generated...
                              #perhaps count the amount of lines that exist in then_code and else_code
-        
+
         #execute the then clause
         program = program + then_code
-        
+
         #jump to end of if statement
         else_end = str(len(else_code))
         program = program + ['LDA 7,'+else_end+'(7) : jump to next evaluation']
-        
+
         lineXPosition = len(program)
-        
+
         #execute the else clause
         program = program + else_code
-        
+
         lineX = program[lineXPosition]
         newLineX = lineX + "; line x"
-        
+
         program[lineXPosition] = newLineX
-        
+
         #store the result of if statement
         program = program + ['ST 0,' + str(self.place) + '(6)']
-                             
+
         return program
     #end IfNode.code_gen()
 #end IfNode
@@ -601,14 +662,19 @@ class IdentifierNode(ValueNode):
         existBool = 0
         current_function = function_record[-1]
         formals = function_table[current_function]["functionNode"].get_formals()
-        for formal in formals:
+        for index, formal in enumerate(formals):
             if self.value == formal[0].get_value():
                 existBool = 1
                 self.outputType = formal[1].get_value()
+                self.formal_position = index
         if existBool != 1:
             msg = "Identifier {} has no declaration in function definition."
             msg = msg.format(self.value)
             return msg
+
+    def code_gen(self,a,b):
+        self.place = 3 + self.formal_position
+        return []
 #end IdentifierNode
 
 
@@ -631,7 +697,7 @@ class NumberLiteralNode(ValueNode):
         self.place = get_open_place( )
         # Load the constant value into register 0, and then save this
         # register to the temporary variable location 'place'
-        program = ['LDC 0,' + str(self.value) + '(5) : NumberLiteralNode constant',
+        program = ['LDC 0,' + str(self.value) + '(000) : NumberLiteralNode constant',
                    'ST 0,' + str(self.place) + '(6) : NumberLiteralNode storage']
         return program
 #end NumberLiteralNode
@@ -641,11 +707,11 @@ class BooleanLiteralNode(ValueNode):
     def __init__(self, boolValue):
         ValueNode.__init__(self, boolValue)
         self.outputType = "boolean"
-    
+
     def code_gen(self, program, line):
         opCode_dict = {"true": "1", "false": "0"}
         self.place = get_open_place( )
-        program = ['LDC 0,' + opCode_dict[self.value] + '(5) : BooleanLiteralNode value', 
+        program = ['LDC 0,' + opCode_dict[self.value] + '(000) : BooleanLiteralNode value',
                    'ST 0,' + str(self.place) + '(6) : BooleanLiteralNode storage']
         return program
 #end BooleanLiteralNode
@@ -692,7 +758,7 @@ class NotNode(UnaryOperator):
     def typeCheck(self):
         if self.value.outputType != "boolean":
             return self.build_error()
-        
+
     def code_gen(self, program, line):
         program = self.value.code_gen(program, line)
         currentBool = int(program[0][6])
@@ -700,7 +766,7 @@ class NotNode(UnaryOperator):
             notBool = 1
         else:
             notBool = 0
-        program[0] = 'LDC 0,' + str(notBool) + '(5) : NotNode value, derived from boolean literal node'
+        program[0] = 'LDC 0,' + str(notBool) + '(000) : NotNode value, derived from boolean literal node'
         return program
 #end NotNode
 
@@ -710,32 +776,32 @@ class NegationNode(UnaryOperator):
         UnaryOperator.__init__(self, operand)
         self.operatorType = "negate"
         self.outputType = "integer"
-        
+
     def typeCheck(self):
         if self.value.outputType != "integer":
             return self.build_error()
-        
+
     def code_gen(self, program, line):
         program = self.value.code_gen(program, line)#descend to a boolean literal
         self.place = self.value.place
-        
+
         #---the following block rebuilds the integer within the LDC line of program---#
         firstLineCount = 6 #"LDC x," is five characters long, start at character 6
         newFirstLine = str()
-        
+
         #check to see if the number in this tm statement is already 'negated'
         if(program[0][firstLineCount] == '-'):
             firstLineCount += 1 #move the number string pointer past the negation marker
         else:
             newFirstLine = "-" #prime the number string to have a negation marker
-            
+
         #rebuild the number string considering the above condition
         while True:
             if program[0][firstLineCount] == '(':
                 break
             newFirstLine += program[0][firstLineCount]
             firstLineCount += 1
-            
+
         #concatenate the remainder of the string... this might be redundant...
         #...but i feel like there was a good reason why i did this.
         while True:
@@ -743,7 +809,7 @@ class NegationNode(UnaryOperator):
             if program[0][firstLineCount] == ')':
                 break
             firstLineCount += 1
-        
+
         #insert new number string back into the program instruction
         program[0] = program[0][0:6] + newFirstLine + " : NegationNode value, derived from number literal node"
         #--- end ---#
@@ -785,7 +851,7 @@ class BooleanConnective(BinaryOperator):
         if self.value.outputType != "boolean" or self.value1.outputType != "boolean":
             return self.build_error()
 #end BooleanConnective superclass
-        
+
 
 class BooleanComparison(BinaryOperator):
     def __init__(self, leftOperand, rightOperand):
@@ -796,7 +862,7 @@ class BooleanComparison(BinaryOperator):
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
             return self.build_error()
 #end BooleanComparison superclass
-        
+
 
 class ArithmeticOperation(BinaryOperator):
     def __init__(self, leftOperand, rightOperand):
@@ -807,7 +873,7 @@ class ArithmeticOperation(BinaryOperator):
     def typeCheck(self):  # code duplication
         if self.value.outputType != "integer" or self.value1.outputType != "integer":
             return self.build_error()
-    
+
     def code_gen(self, program, line):
         opCode_dict = {'+' : 'ADD', '-' : 'SUB', '*' : 'MUL', '/' : 'DIV'}
         right, left = super().get_values()
@@ -831,7 +897,7 @@ class LessThanNode(BooleanComparison):
         BooleanComparison.__init__(self, leftOperand, rightOperand)
         self.operatorType = "<"
         self.outputType = "boolean"
-        
+
     def code_gen(self, program, line):
         right, left = super().get_values()
         program = left.code_gen(program,line) + right.code_gen(program, line)
@@ -841,7 +907,7 @@ class LessThanNode(BooleanComparison):
                              #subtract r0 by r1. If the restult is less than zero, then r0 less than r1
                              'SUB 2,1,0',
                              'JLT 2,3(7) : jump to next line x',#if r0 is less than r1, then jump to line x,
-                             'LDC 0,0(5) : LessThanNode evaluates to false',#load 0 into register 0; this test is false
+                             'LDC 0,0(000) : LessThanNode evaluates to false',#load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7) : jump to next evaluation',#jump past else statement
                              'LDC 0,1(5) : line x; LessThanNode evaluates to true',#line x: load 1 into register 0; this test is true
@@ -855,7 +921,7 @@ class EqualToNode(BooleanComparison):
         BooleanComparison.__init__(self, leftOperand, rightOperand)
         self.operatorType = "="
         self.outputType = "boolean"
-        
+
     def code_gen(self, program, line):
         right, left = super().get_values()
         program = left.code_gen(program,line) + right.code_gen(program, line)
@@ -865,10 +931,10 @@ class EqualToNode(BooleanComparison):
                              #subtract r0 by r1. If the result is not zero, then they are not equal
                              'SUB 2,0,1',
                              'JNE 2, 3(7) : jump to next line x',#if not equal to zero, go to line x
-                             'LDC 0,1(5) : EqualNode evaluates to true', #load 1 into register 0; this test is true
+                             'LDC 0,1(000) : EqualNode evaluates to true', #load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7) : jump to next evaluation',#jump past else statement
-                             'LDC 0,0(5) : line x; EqualNode evaluates to false', #line x: load 0 into register 0; this test is false
+                             'LDC 0,0(000) : line x; EqualNode evaluates to false', #line x: load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)']
         return program
 #end EqualToNode
@@ -879,7 +945,7 @@ class OrNode(BooleanConnective):
         BooleanConnective.__init__(self, leftOperand, rightOperand)
         self.operatorType = "or"
         self.outputType = "boolean"
-        
+
     def code_gen(self, program, line):
         right, left = super().get_values()
         program = left.code_gen(program, line) + right.code_gen(program, line)
@@ -888,14 +954,14 @@ class OrNode(BooleanConnective):
                              'LD 1,' + str(right.place) + '(6) : OrNode right operand',
                              'JNE 0,4(7) : jump to next line x',#if left side is not zero, go to line x
                              'JNE 1,3(7) : jump to next line x',#if right side is not zero, go to line x
-                             'LDC 0,0(5) : OrNode evaulates to false',#load 0 into register 0; this test is false
+                             'LDC 0,0(000) : OrNode evaulates to false',#load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7) : jump to next evaluation',#jump past else statement
-                             'LDC 0,1(5) : line x; OrNode evaulates to true',#line x: load 1 into register 0; this test is true
+                             'LDC 0,1(000) : line x; OrNode evaulates to true',#line x: load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)']
         return program
 #end OrNode
-        
+
 
 class PlusNode(ArithmeticOperation):
     def __init__(self, leftOperand, rightOperand):
@@ -918,7 +984,7 @@ class AndNode(BooleanConnective):
         BooleanConnective.__init__(self, leftOperand, rightOperand)
         self.operatorType = "and"
         self.outputType = "boolean"
-        
+
     def code_gen(self,program,line):
         right, left = super().get_values()
         program = left.code_gen(program,line) + right.code_gen(program,line)
@@ -927,10 +993,10 @@ class AndNode(BooleanConnective):
                              'LD 1,' + str(right.place) + '(6) : AndNode right operand',
                              'JEQ 0,4(7) : jump to next line x',#if left is equal to 0, go to line x
                              'JEQ 1,3(7) : jump to next line x',#if right is equal to 0, go to line x
-                             'LDC 0,1(5) : AndNode evaluates to true',#load 1 into register 0; this test is true
+                             'LDC 0,1(000) : AndNode evaluates to true',#load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7) : jump to next evaulation',#jump past else statement
-                             'LDC 0,0(5) : line x; AndNode evaulates to false',#line x: load 0 into register 0; this test is false
+                             'LDC 0,0(000) : line x; AndNode evaulates to false',#line x: load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)']
         return program
 #end AndNode
