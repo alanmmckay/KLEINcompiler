@@ -1,0 +1,2 @@
+function main() : boolean
+  false or (true and 3)

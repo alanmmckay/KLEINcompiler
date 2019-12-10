@@ -1,0 +1,17 @@
+function main( i : integer, n : integer) : boolean
+  if i < n then
+     pass(i, n) or pass2(i+1, n)
+  else
+     false
+
+function pass( a : integer, b : integer) : boolean
+  if b < a then
+    true
+  else
+    pass(a,b-1)
+
+function pass2( k : integer, l : integer) : boolean
+  if l < k then
+    true
+  else
+    pass2(k+1, l)
