@@ -222,8 +222,8 @@ class ProgramNode(ASTnode):
         #perhaps replace index - 1 with r6_address
         program += self.definitionsNode.code_gen(7 + ((index - 1)*2))
 
-        front_matter = main_arguments + ['LDC 6,1(5)',#set position of top
-                        'LDC 1,2(5)',
+        front_matter = main_arguments + ['LDC 6,1(4)',#set position of top
+                        'LDC 1,2(4)',
                         'ADD 1,7,1',
                         'ST 1,0(6)',#store return address
                         'LDA 7,' + str(function_table['main']['stack_position'] + 2) + '(7)',
@@ -243,7 +243,7 @@ class ProgramNode(ASTnode):
                 # ... and replace with a 'load-constant' to put the address of
                 #     the called function into the PC (register 7)
                 function_address = function_table[instruction.split()[1]]['function_address']
-                program.insert( index, 'LDC 7,' + str(function_address) + '(5) : '+instruction.split()[1]+' FUNCTION-CALL')
+                program.insert( index, 'LDC 7,' + str(function_address) + '(4) : '+instruction.split()[1]+' FUNCTION-CALL')
                 
         return program
 #end ProgramNode
@@ -483,7 +483,7 @@ class FunctionCallNode(ASTnode):
             program.append( 'ST 5,' + str(self.place + 3 + index) + '(6)' )
 
         # (Compute and) Copy the return address into the new stack frame
-        program.append( 'LDC 1,4(5)' )
+        program.append( 'LDC 1,4(4)' )
         program.append( 'ADD 1,7,1' )
         program.append( 'ST 1,' + str(self.place) + '(6)' )
 
@@ -672,7 +672,7 @@ class NumberLiteralNode(ValueNode):
         self.place = get_open_place( )
         # Load the constant value into register 0, and then save this
         # register to the temporary variable location 'place'
-        program = ['LDC 0,' + str(self.value) + '(5) : NumberLiteralNode constant',
+        program = ['LDC 0,' + str(self.value) + '(4) : NumberLiteralNode constant',
                    'ST 0,' + str(self.place) + '(6) : NumberLiteralNode storage']
         return program
 #end NumberLiteralNode
@@ -686,7 +686,7 @@ class BooleanLiteralNode(ValueNode):
     def code_gen(self, program, line):
         opCode_dict = {"true": "1", "false": "0"}
         self.place = get_open_place( )
-        program = ['LDC 0,' + opCode_dict[self.value] + '(5) : BooleanLiteralNode value',
+        program = ['LDC 0,' + opCode_dict[self.value] + '(4) : BooleanLiteralNode value',
                    'ST 0,' + str(self.place) + '(6) : BooleanLiteralNode storage']
         return program
 #end BooleanLiteralNode
@@ -741,10 +741,10 @@ class NotNode(UnaryOperator):
         program = program + ['LD 0,'+str(self.value.place)+'(6)',
                              #if reg 0 is 1: store 1; else: store 0
                              'JEQ 0,3(7)',#jump if equal to zero
-                             'LDC 0,0(5)',#not equal to zero thus change to zero
+                             'LDC 0,0(4)',#not equal to zero thus change to zero
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,1(7)',
-                             'LDC 0,1(5)',
+                             'LDC 0,1(4)',
                              'ST 0,' + str(self.place) + '(6)'
                              ]
         return program
@@ -766,7 +766,8 @@ class NegationNode(UnaryOperator):
         self.place = get_open_place()
         
         program = program + ['LD 0,'+str(self.value.place)+'(6)',
-                             'SUB 0,5,0',
+                             'OUT 4,0,0',
+                             'SUB 0,4,0',
                              'ST 0,'+str(self.place)+'(6)'
                              ]
         
@@ -865,10 +866,10 @@ class LessThanNode(BooleanComparison):
                              #subtract r0 by r1. If the restult is less than zero, then r0 less than r1
                              'SUB 2,1,0',
                              'JLT 2,3(7) : jump to next line x',#if r0 is less than r1, then jump to line x,
-                             'LDC 0,0(5) : LessThanNode evaluates to false',#load 0 into register 0; this test is false
+                             'LDC 0,0(4) : LessThanNode evaluates to false',#load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7) : jump to next evaluation',#jump past else statement
-                             'LDC 0,1(5) : line x; LessThanNode evaluates to true',#line x: load 1 into register 0; this test is true
+                             'LDC 0,1(4) : line x; LessThanNode evaluates to true',#line x: load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)']
         return program
 #end LessThanNode
@@ -889,10 +890,10 @@ class EqualToNode(BooleanComparison):
                              #subtract r0 by r1. If the result is not zero, then they are not equal
                              'SUB 2,0,1',
                              'JNE 2, 3(7) : jump to next line x',#if not equal to zero, go to line x
-                             'LDC 0,1(5) : EqualNode evaluates to true', #load 1 into register 0; this test is true
+                             'LDC 0,1(4) : EqualNode evaluates to true', #load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7) : jump to next evaluation',#jump past else statement
-                             'LDC 0,0(5) : line x; EqualNode evaluates to false', #line x: load 0 into register 0; this test is false
+                             'LDC 0,0(4) : line x; EqualNode evaluates to false', #line x: load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)']
         return program
 #end EqualToNode
@@ -912,10 +913,10 @@ class OrNode(BooleanConnective):
                              'LD 1,' + str(right.place) + '(6) : OrNode right operand',
                              'JNE 0,4(7) : jump to next line x',#if left side is not zero, go to line x
                              'JNE 1,3(7) : jump to next line x',#if right side is not zero, go to line x
-                             'LDC 0,0(5) : OrNode evaulates to false',#load 0 into register 0; this test is false
+                             'LDC 0,0(4) : OrNode evaulates to false',#load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7) : jump to next evaluation',#jump past else statement
-                             'LDC 0,1(5) : line x; OrNode evaulates to true',#line x: load 1 into register 0; this test is true
+                             'LDC 0,1(4) : line x; OrNode evaulates to true',#line x: load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)']
         return program
 #end OrNode
@@ -951,10 +952,10 @@ class AndNode(BooleanConnective):
                              'LD 1,' + str(right.place) + '(6) : AndNode right operand',
                              'JEQ 0,4(7) : jump to next line x',#if left is equal to 0, go to line x
                              'JEQ 1,3(7) : jump to next line x',#if right is equal to 0, go to line x
-                             'LDC 0,1(5) : AndNode evaluates to true',#load 1 into register 0; this test is true
+                             'LDC 0,1(4) : AndNode evaluates to true',#load 1 into register 0; this test is true
                              'ST 0,' + str(self.place) + '(6)',
                              'LDA 7,2(7) : jump to next evaulation',#jump past else statement
-                             'LDC 0,0(5) : line x; AndNode evaulates to false',#line x: load 0 into register 0; this test is false
+                             'LDC 0,0(4) : line x; AndNode evaulates to false',#line x: load 0 into register 0; this test is false
                              'ST 0,' + str(self.place) + '(6)']
         return program
 #end AndNode
