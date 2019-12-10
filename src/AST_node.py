@@ -766,46 +766,10 @@ class NegationNode(UnaryOperator):
         self.place = get_open_place()
         
         program = program + ['LD 0,'+str(self.value.place)+'(6)',
-                             #if reg 0 is 1: store 1; else: store 0
-                             'JEQ 0,x(7)',#jump if equal to zero
-                             'LDC 0,0(5)',#not equal to zero thus change to zero
+                             'SUB 0,5,0',
+                             'ST 0,'+str(self.place)+'(6)'
                              ]
-        '''
-        #---the following block rebuilds the integer within the LDC line of program---#
-        if(program[0][0:3] == 'LDC'):
-            firstLineCount = 6
-            initval = 6
-        elif(program[0][0:3] == 'LD '):
-            firstLineCount = 5
-            initval = 5
-        #firstLineCount = 6 #"LDC x," is five characters long, start at character 6
-        newFirstLine = str()
-
-        #check to see if the number in this tm statement is already 'negated'
-        if(program[0][firstLineCount] == '-'):
-            firstLineCount += 1 #move the number string pointer past the negation marker
-        else:
-            newFirstLine = "-" #prime the number string to have a negation marker
-
-        #rebuild the number string considering the above condition
-        while True:
-            if program[0][firstLineCount] == '(':
-                break
-            newFirstLine += program[0][firstLineCount]
-            firstLineCount += 1
-
-        #concatenate the remainder of the string... this might be redundant...
-        #...but i feel like there was a good reason why i did this.
-        while True:
-            newFirstLine += program[0][firstLineCount]
-            if program[0][firstLineCount] == ')':
-                break
-            firstLineCount += 1
-            
-        #insert new number string back into the program instruction
-        program[0] = program[0][0:initval] + newFirstLine + " : NegationNode value, derived from number literal node"
-        '''
-        #--- end ---#
+        
         return program
 #end NegationNode
 
