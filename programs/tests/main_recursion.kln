@@ -1,0 +1,6 @@
+function main( param : integer ):boolean
+    print(param)
+    if 1 < param then
+        main(param - 1)
+    else
+        true

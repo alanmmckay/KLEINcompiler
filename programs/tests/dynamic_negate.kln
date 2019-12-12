@@ -1,3 +1,7 @@
+(* --- A function which tests nested negations. First parameter
+is the number to apply the negation. The second parameter is the
+amount of negations to put the first through --- *)
+
 function main(number : integer, negations : integer): integer
     if 0 < negations then
         main( -(number), negations - 1)

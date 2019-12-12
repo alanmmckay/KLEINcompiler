@@ -1,0 +1,8 @@
+(* --- This function is a test of our order of 
+operations. It fails. Consider sets {+,-) and {*,/},
+it seems binary operations of consecutive elements 
+from the same set will execute in a right to left
+fashion. --- *)
+
+function main():integer
+    (3 * 4) * 4 / 2
