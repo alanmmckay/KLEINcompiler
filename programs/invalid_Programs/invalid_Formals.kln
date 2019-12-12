@@ -1,4 +1,0 @@
-(*invalid formals list because of no formal after ,*)
-function invalid_formals(a : boolean, b : interger,): integer
-    print(10)
-    abc

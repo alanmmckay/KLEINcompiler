@@ -1,4 +1,0 @@
-(*put the formals where the actuals were*)
-
-function bad_actuals( ): integer
-    something ( x : integer )

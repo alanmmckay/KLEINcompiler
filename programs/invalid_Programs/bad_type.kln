@@ -1,4 +1,0 @@
-(*not a valid type,but valid token identifier*)
-function bad_type(a : interger) : boolen
-    print(37)
-    25

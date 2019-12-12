@@ -1,2 +1,0 @@
-function cannot_just_print(): integer
-    print(20)
