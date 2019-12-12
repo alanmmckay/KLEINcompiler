@@ -1,0 +1,4 @@
+(* not is unary not binary *)
+
+function bad_connective(): integer
+    a + b not c

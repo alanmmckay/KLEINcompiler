@@ -1,0 +1,4 @@
+(*not an actual factor, missing required else*)
+
+function bad_else (a:boolean,b:boolean): boolean
+    if a then b
