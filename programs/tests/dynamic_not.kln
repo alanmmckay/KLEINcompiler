@@ -1,0 +1,10 @@
+(* --- A function which tests nested nots. First parameter
+is the boolean value to apply the not operation. The second
+parameter is the amount of not operations to apply to the
+first --- *)
+
+function main(bool : boolean, nots : integer):boolean
+    if 0 < nots then
+        main(not bool, nots - 1)
+    else
+        bool

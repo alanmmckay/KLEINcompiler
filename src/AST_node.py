@@ -766,11 +766,9 @@ class NegationNode(UnaryOperator):
         self.place = get_open_place()
         
         program = program + ['LD 0,'+str(self.value.place)+'(6)',
-                             'OUT 4,0,0',
                              'SUB 0,4,0',
                              'ST 0,'+str(self.place)+'(6)'
                              ]
-        
         return program
 #end NegationNode
 
