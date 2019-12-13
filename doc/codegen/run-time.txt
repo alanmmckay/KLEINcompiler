@@ -68,10 +68,3 @@ IMEM:
   : / / / / / / / / / / :
   :---------------------:
 
--The program initializes by declaring the top of the stack into register 6, where the intial value is 6.
--This top value is stored into memory, returning to it will output the result of the program then call the HALT opcode.
--The runtime system will then grab the main function from the symbol_table. A load address instruction is called factoring the previous two opcodes to output and halt the program.
--The main function is simply an activation record which stores the return address to the previously mentioned opcodes. The logic set to build an activation record resides within the code_gen() method of a FunctionNode.
-    ->The state of the program is stored within memory. These positions are calcuated based on the current state of top while factoring a space for a return address and a return value.
-	-->Space for the arguments is not being factored
-    ->The function's body code_gen() method is then called, which loads in instructions based on the expressions that are presented.
