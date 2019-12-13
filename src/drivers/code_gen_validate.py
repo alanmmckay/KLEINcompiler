@@ -36,7 +36,8 @@ gen = Generator(ast)
 program = gen.generate()
 
 #  output to a tm file
-FILE_PATH = FILE_PATH.strip(".kln")
+#FILE_PATH = FILE_PATH.strip(".kln")
+FILE_PATH = FILE_PATH[0:-4]
 filename = FILE_PATH + ".tm"
 output = open(filename, "w")
 output.write(program)
