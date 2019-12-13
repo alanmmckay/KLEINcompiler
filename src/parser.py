@@ -114,6 +114,7 @@ class Parser:
             if isinstance(result, list):
                 msg = top(result).get_message()
                 raise SemanticError(msg, self.scanner.get_program_string(),self.debug_semantic_string)
+            #print(result.information[0].information[0].information[0].information[0])
             return top(semantic_stack)
         
         ################################################
