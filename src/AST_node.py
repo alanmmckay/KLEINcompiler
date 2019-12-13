@@ -181,7 +181,8 @@ class ASTnode(object):
             return self.information[position]
 
     def typeCheck(self):
-        pass
+        if 'main' not in function_table:
+            return "A main function must be declared."
 
     def get_outputType(self):
         return self.outputType
@@ -274,7 +275,7 @@ class DefinitionsNode(ASTnode):
 
     def typeCheck(self):
         if self.functionSwitch != None:
-            msg = 'Duplicate Function: {}'
+            msg = 'Duplicate Function Declaration: {}'
             msg = msg.format(self.functionSwitch)
             return msg
 
@@ -313,11 +314,31 @@ class FunctionNode(ASTnode):
         return "function " + str(self.identifierNode) + " " + str(self.formals) + " " + str(
             self.typeNode) + " \n" + str(self.bodyNode) + " "
 
+    def check_formals(self):
+        current_function = function_record[-1]
+        formal_list = []
+        for formal in self.formals.get_formals():
+            if formal[0].get_value() in formal_list:
+                msg = "Duplicate parameter {} in function {}."
+                msg = msg.format(formal[0].get_value(), current_function)
+                return msg
+            push(formal[0].get_value(),formal_list)
+            
+
     def typeCheck(self):
         if self.outputType != self.bodyNode.get_outputType():
             msg = "Failed typecheck on FunctionNode: {}\n"
-            msg = msg.format(self.identifierNode.get_value())
+            msg += "Make sure function's body has the same output "
+            msg += "as the function's declared type:\n"
+            msg += "Function {}'s declared type: {}\n"
+            msg += "Body output type: {}\n"
+            bodyOutputType = self.bodyNode.outputType
+            if self.bodyNode.outputType == "":
+                self.bodyNode.outputType = "None"
+            msg = msg.format(self.identifierNode.get_value(), self.identifierNode.get_value(), self.outputType, self.bodyNode.outputType)
             return msg
+        msg = self.check_formals()
+        return msg
 
     def code_gen(self, line):#need to clean up comments here...
         current_function = str(self.identifierNode)
@@ -457,11 +478,13 @@ class FunctionCallNode(ASTnode):
         return self.returnString
 
     def typeCheck(self):
+        current_function = function_record[-1]
         if self.identifierNode.get_value() in function_table:
             self.outputType = function_table[self.identifierNode.get_value()]["functionNode"].get_outputType()
         else:
-            msg = "Function call {} is undefined."
-            msg = msg.format(self.identifierNode.get_value())
+            msg = "Function call {} is undefined.\n"
+            msg += "This function call occurs in {}.\n"
+            msg = msg.format(self.identifierNode.get_value(),current_function)
             return msg
 
     def code_gen(self, a, b):
@@ -552,15 +575,18 @@ class IfNode(ASTnode):
         return self.returnString
 
     def typeCheck(self):
+        current_function = function_record[-1]
         if self.condition.get_outputType() == "boolean": #use outputType accessor here?
             if self.expr1.get_outputType() == self.expr2.get_outputType():
                 self.outputType = self.expr1.get_outputType()
             else:
-                msg = "If statement has inconsistent output type"
-                msg = msg.format()
+                msg = "If statement in function {} has inconsistent output type:\n"
+                msg += "Then clause output type: {}\n"
+                msg += "Else clause output type: {}\n"
+                msg = msg.format(current_function, self.expr1.get_outputType(), self.expr2.get_outputType())
                 return msg
         else:
-            msg = "If statement requires a boolean condition."
+            msg = "If statement requires a boolean conditional."
             msg = msg.format()
             return msg
 
@@ -639,8 +665,8 @@ class IdentifierNode(ValueNode):
                 self.outputType = formal[1].get_value()
                 self.formal_position = index
         if existBool != 1:
-            msg = "Identifier {} has no declaration in function definition."
-            msg = msg.format(self.value)
+            msg = "Identifier {} referred in {} has no declaration in function definition."
+            msg = msg.format(self.value, current_function)
             return msg
 
     def code_gen(self,a,b):
@@ -717,8 +743,9 @@ class UnaryOperator(Operator):
         return self.returnString
 
     def build_error(self):
-        msg = "{} expression expecting {}, received {}."
-        msg = msg.format(self.operatorType, self.outputType, self.value.outputType)
+        current_function = function_record[-1]
+        msg = "{} expression within function {} expecting {}, received {}({})."
+        msg = msg.format(self.operatorType, current_function, self.outputType, self.value, self.value.outputType)
         return msg
 #end UnaryOperator superclass
 
@@ -791,8 +818,9 @@ class BinaryOperator(UnaryOperator):
         return (self.value1, self.value)
 
     def build_error(self):
-        msg = "{} expression expecting {}s, received {} and {}."
-        msg = msg.format(self.operatorType, self.outputType, self.value1.outputType, self.value.outputType)
+        current_function = function_record[-1]
+        msg = "{} expression within function {} expecting {}s, received {}({}) and {}({})."
+        msg = msg.format(self.operatorType, current_function, self.outputType, self.value1, self.value1.outputType, self.value, self.value.outputType)
         return msg
 #end BinaryOperator superclass
 
