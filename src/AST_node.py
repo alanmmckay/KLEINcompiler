@@ -181,7 +181,8 @@ class ASTnode(object):
             return self.information[position]
 
     def typeCheck(self):
-        pass
+        if 'main' not in function_table:
+            return "A main function must be declared."
 
     def get_outputType(self):
         return self.outputType
