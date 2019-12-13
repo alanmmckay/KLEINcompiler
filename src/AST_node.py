@@ -314,6 +314,17 @@ class FunctionNode(ASTnode):
         return "function " + str(self.identifierNode) + " " + str(self.formals) + " " + str(
             self.typeNode) + " \n" + str(self.bodyNode) + " "
 
+    def check_formals(self):
+        current_function = function_record[-1]
+        formal_list = []
+        for formal in self.formals.get_formals():
+            if formal[0].get_value() in formal_list:
+                msg = "Duplicate parameter {} in function {}."
+                msg = msg.format(formal[0].get_value(), current_function)
+                return msg
+            push(formal[0].get_value(),formal_list)
+            
+
     def typeCheck(self):
         if self.outputType != self.bodyNode.get_outputType():
             msg = "Failed typecheck on FunctionNode: {}\n"
@@ -326,6 +337,8 @@ class FunctionNode(ASTnode):
                 self.bodyNode.outputType = "None"
             msg = msg.format(self.identifierNode.get_value(), self.identifierNode.get_value(), self.outputType, self.bodyNode.outputType)
             return msg
+        msg = self.check_formals()
+        return msg
 
     def code_gen(self, line):#need to clean up comments here...
         current_function = str(self.identifierNode)
