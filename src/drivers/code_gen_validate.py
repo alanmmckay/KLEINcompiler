@@ -1,9 +1,6 @@
 from sys import argv, path
 import os
-
-path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)) + '/../../'))
-path.insert(0, os.getcwd())
-
+path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.parser import Parser
 from src.scanner import Scanner
 # have to import some sort of sem analyzer how ever we decide to do that
@@ -42,4 +39,3 @@ filename = FILE_PATH + ".tm"
 output = open(filename, "w")
 output.write(program)
 print("TM code saved to file {}".format(filename))
-

@@ -1,0 +1,5 @@
+function main(m:boolean,n:boolean):boolean
+    if (m and true) and (n and true) then
+        false
+    else
+        m or n

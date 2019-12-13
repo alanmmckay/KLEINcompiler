@@ -1,0 +1,5 @@
+(* --- A simple program that takes two booleans as input
+and tests them in an or statement ---*)
+
+function main(m:boolean,n:boolean):boolean
+    m or n

@@ -1,0 +1,2 @@
+function main():integer
+    true + 3
